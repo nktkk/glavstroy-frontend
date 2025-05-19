@@ -16,7 +16,8 @@ function App() {
     <UserProvider>
       <BrowserRouter>
         <Routes>
-            <Route path='/login' element={<ThemeProvider theme={formThemes.registerFormTheme}><Auth/></ThemeProvider>} />
+            {/* <Route path='/login' element={<ThemeProvider theme={formThemes.registerFormTheme}><Auth/></ThemeProvider>} /> */}
+            <Route path='/login' element={<ThemeProvider theme={formThemes.offerFormTheme}><DashboardContractor view={false}/></ThemeProvider>} />
             <Route path='/data-supervisor' element={
               <ProtectedRoute requiredRole="Admin">
                 <ThemeProvider theme={formThemes.registerFormTheme}>

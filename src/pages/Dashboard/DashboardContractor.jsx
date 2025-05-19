@@ -5,11 +5,12 @@ import styles from './Dashboard.module.css';
 import OfferCardComponent from '../../components/OfferCardComponent.jsx';
 import Selector from '../../components/Selector.jsx';
 import okvedDictionary from '../../data/okved.jsx';
-import { Edit } from '@mui/icons-material';
+import { Block, Cancel, Check, Edit, LockOpen } from '@mui/icons-material';
 
 export default function DashboardContractor({ view }) {
-    // Состояние для личных данных подрядчика с новыми полями
     const [edit, setEdit] = useState(false);
+    const [block, setBlock] = useState(false);
+    const [reason, setReason] = useState('');
     const [contractorData, setContractorData] = useState({
         identificationNumber: '9729219090',
         contractorName: "ООО СтройГрад",
@@ -22,7 +23,9 @@ export default function DashboardContractor({ view }) {
         foundedAt: "2020-03-15",
         address: "г. Москва, ул. Строительная, д. 15",
         taxForm: "ОСН",
-        okvedCode: "43.21"
+        okvedCode: "43.21",
+        isBlocked: true,
+        blockedReason: 'Сосал бибу ыва  аыв аыв аыв ав ыа выаыв аыв аа в ав ыа выа  авы аыв аыв аыв ав а'
     });
 
     const [errors, setErrors] = useState({
@@ -37,27 +40,23 @@ export default function DashboardContractor({ view }) {
         foundedAt: '',
         address: '',
         taxForm: '',
-        okvedCode: ''
+        okvedCode: '',
     });
 
-    // Массив предложений подрядчика (остается без изменений)
     const [offers] = useState([
         // ... существующие предложения ...
     ]);
 
-    // Валидация email
     const validateEmail = (email) => {
         const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
         return emailRegex.test(email);
     };
 
-    // Валидация телефона
     const validatePhone = (phone) => {
         const digitsOnly = phone.replace(/\D/g, '');
         return digitsOnly.length === 11 && (digitsOnly.startsWith('7') || digitsOnly.startsWith('8'));
     };
 
-    // Валидация ИНН
     const validateINN = (inn) => {
         if (!/^\d{10}$/.test(inn)) return false;
         const checkDigit = [2, 4, 10, 3, 5, 9, 4, 6, 8];
@@ -73,7 +72,6 @@ export default function DashboardContractor({ view }) {
         return sum === parseInt(inn.charAt(9));
     };
 
-    // Валидация КПП
     const validateKPP = (kpp) => {
         return /^\d{4}[A-Z0-9]{2}\d{3}$/.test(kpp);
     };
@@ -85,7 +83,6 @@ export default function DashboardContractor({ view }) {
                 [field]: value
             }));
 
-            // Сбрасываем ошибку при изменении поля
             if (errors[field]) {
                 setErrors(prev => ({
                     ...prev,
@@ -182,7 +179,6 @@ export default function DashboardContractor({ view }) {
         if (validateForm()) {
             console.log('Сохранение данных:', contractorData);
             setEdit(false)
-            // Здесь будет логика сохранения
         } else {
             console.log('Форма содержит ошибки');
         }
@@ -210,10 +206,28 @@ export default function DashboardContractor({ view }) {
         setEdit(!edit);
     }
 
+    const toogleBlock = (e) => {
+        setBlock(!block);
+    }
+
+    const handleSubmitBlock = async (e) => {
+        if (!reason){
+            return;
+        }
+        console.log('block' + reason);
+        setBlock(false);
+    }
+    const handleSubmitUnblock = async (e) => {
+        if (!reason){
+            return;
+        }
+        console.log('block' + reason);
+        setBlock(false);
+    }
+
     return (
         <>
             <div className={styles.mainContainer}>
-                {/* Кнопка возврата */}
                 <div className={styles.backButtonContainer}>
                     <IconButton 
                         onClick={handleGoBack} 
@@ -228,21 +242,83 @@ export default function DashboardContractor({ view }) {
                     ) : (
                         <>
                             {view ? (<></>) : (
-                                <IconButton 
-                                    onClick={toogleEdit} 
-                                    className={styles.backButton}
-                                    size="large"
-                                >
-                                    <Edit sx={{ color: '#fff', fontSize: 30 }} />
-                                </IconButton>
+                                <>
+                                    {contractorData.isBlocked ? 
+                                    (
+                                        <div style={{
+                                            color: '#fff', 
+                                            position: 'absolute', 
+                                            width: '80em',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap',
+                                            top: '10px',
+                                            left: '60px'
+                                        }} 
+                                        >
+                                            <div>Ваш аккаун был заблокирован по причине: {contractorData.blockedReason}.</div>
+                                            <div>Обратитесь в поддержку: +7 (812) 677-75-76.</div>
+                                        </div>
+                                    ) : (
+                                        <IconButton 
+                                            onClick={toogleEdit} 
+                                            className={styles.backButton}
+                                            size="large"
+                                        >
+                                            <Edit sx={{ color: '#fff', fontSize: 30 }} />
+                                        </IconButton>
+                                    )}
+                                </>
                             )}
                             
                         </>
                     )}
+                    {view && !contractorData.isBlocked ? (
+                        <IconButton 
+                            onClick={toogleBlock} 
+                            className={styles.backButton}
+                            size="large"
+                            disabled={contractorData.isBlocked}
+                        >
+                            {block ? (<Cancel sx={{ color: '#fff', fontSize: 30 }} />) : (<Block sx={{ color: '#fff', fontSize: 30 }} />)}
+                        </IconButton>
+                    ) : (<></>)}
+                    {block ? (
+                        <>
+                            <TextField
+                                placeholder="Причина блокировки"
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                                variant="outlined"
+                            />
+                            <IconButton 
+                                onClick={handleSubmitBlock} 
+                                className={styles.backButton}
+                                size="large"
+                            >
+                                <Check sx={{ color: '#fff', fontSize: 30 }} />
+                            </IconButton>
+                        </>
+                    ) : (<></>)}
+                    {contractorData.isBlocked ? (
+                        <>
+                            {view ? (
+                                <IconButton 
+                                    onClick={handleSubmitUnblock} 
+                                    className={styles.backButton}
+                                    size="large"
+                                >
+                                    <LockOpen sx={{ color: '#fff', fontSize: 30 }} />
+                                </IconButton>
+                            ) : (
+                                <div></div>
+                            )}
+                            
+                        </>
+                    ) : (<></>)}
                     
                 </div>
 
-                {/* Контейнер с личными данными подрядчика */}
                 <div className={`${styles.infoContainer} ${styles.contractorInfo}`}>
                     <h2 className={styles.sectionTitle}>Информация о подрядчике</h2>
                     
@@ -369,7 +445,6 @@ export default function DashboardContractor({ view }) {
                             helperText={errors.address}
                         />
 
-                        
                         <TextField
                             label="Описание деятельности"
                             value={contractorData.contractorDescription}
@@ -383,7 +458,6 @@ export default function DashboardContractor({ view }) {
                             helperText={errors.contractorDescription}
                         />
 
-                        
                     </div>
 
                     {!view && edit && (
@@ -407,7 +481,6 @@ export default function DashboardContractor({ view }) {
                     )}
                 </div>
 
-                {/* Контейнер со списком предложений */}
                 <div className={`${styles.infoContainer} ${styles.offersContainer}`}>
                     <h2 className={styles.sectionTitle}>Предложения подрядчика</h2>
                     {view ? (
