@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import './App.css'
 import OfferList from './pages/OfferList/OfferList'
 import {ThemeProvider } from '@mui/material/styles';
@@ -10,14 +9,59 @@ import DashboardContractor from './pages/Dashboard/DashboardContractor.jsx';
 import DashboardAdmin from './pages/Dashboard/DashboardAdmin.jsx';
 import { UserProvider } from './contexts/UserContext.jsx';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 function App() {
   return (
     <UserProvider>
       <BrowserRouter>
         <Routes>
-            <Route path='/' element={<ThemeProvider theme={formThemes.registerFormTheme}><Auth/></ThemeProvider>} />
-            <Route path='/' element={<ThemeProvider theme={formThemes.registerFormTheme}><Auth/></ThemeProvider>} />
+            <Route path='/login' element={<ThemeProvider theme={formThemes.registerFormTheme}><Auth/></ThemeProvider>} />
+            <Route path='/data-supervisor' element={
+              <ProtectedRoute requiredRole="Admin">
+                <ThemeProvider theme={formThemes.registerFormTheme}>
+                  <DataAdmin/>
+                </ThemeProvider>
+              </ProtectedRoute>
+            } />
+            <Route path='/dashboard-supervisor' element={
+              <ProtectedRoute requiredRole="Admin">
+                <ThemeProvider theme={formThemes.offerFormTheme}>
+                  <DashboardAdmin/>
+                </ThemeProvider>
+              </ProtectedRoute>
+            } />
+            <Route path='/proposals' element={
+              <ProtectedRoute requiredRole="Admin">
+                <ThemeProvider theme={formThemes.offerFormTheme}>
+                  <OfferList/>
+                </ThemeProvider>
+              </ProtectedRoute>
+            } />
+            <Route path='/contractor/:contractorId' element={
+              <ProtectedRoute requiredRole="Admin">
+                <ThemeProvider theme={formThemes.offerFormTheme}>
+                  <DashboardContractor view={true}/>
+                </ThemeProvider>
+              </ProtectedRoute>
+            } />
+
+            <Route path='/data-contractor' element={
+              <ProtectedRoute requiredRole="Contractor">
+                <ThemeProvider theme={formThemes.registerFormTheme}>
+                  <DataContractor/>
+                </ThemeProvider>
+              </ProtectedRoute>
+            } />
+            <Route path='/dashboard-contractor' element={
+              <ProtectedRoute requiredRole="Contractor">
+                <ThemeProvider theme={formThemes.offerFormTheme}>
+                  <DashboardContractor view={false}/>
+                </ThemeProvider>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </BrowserRouter>
     </UserProvider>
