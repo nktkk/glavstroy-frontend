@@ -1,0 +1,459 @@
+import styles from './OfferList.module.css'
+import { Box, Button, TextField, Stack, Popover, IconButton} from '@mui/material';
+import { useState, useEffect } from 'react';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { format } from 'date-fns';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import CheckIcon from '@mui/icons-material/Check';
+import logo from '../../assets/logo-white.png'
+import Selector from '../../components/Selector.jsx';
+import SocialObjectSelect from '../../components/SocialObjectsSelect.jsx';
+import OfferCardComponent from '../../components/OfferCardComponent.jsx';
+import okvedDictionary from '../../data/okved.jsx';
+import PersonIcon from '@mui/icons-material/Person';
+
+const socialObjects = {
+  'Школа': 'Школа',
+  'Поликлиника': 'Поликлиника',
+  'Больница': 'Больница',
+  'Детский сад': 'Детский сад'
+};
+const objects = {
+  'ЖК Северная долина': 'ЖК Северная долина',
+  'ЖК Панорама 360': 'ЖК Панорама 360',
+  'ЖК Юнтолово': 'ЖК Юнтолово',
+  'Кронфорт': 'Кронфорт'
+};
+
+export default function OfferList(){
+    const [selectedPeriod, setSelectedPeriod] = useState('today');
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [isFullWidth, setIsFullWidth] = useState(true);
+
+    const [filterData, setFilterData] = useState({
+        "proposalId": '',
+        "proposalName": '',
+        "contractorId": '',
+        "contractorName": '',
+        "contractorInn": '',
+        "contractNumber": '',
+        "facilities": [],
+        "socialFacilities": [],
+        "okvedCodes": [],
+        "period": {
+            "from": null,
+            "to": null
+        },
+        "priceRange": {
+            "min": '',
+            "max": ''
+        },
+        "afterId": '',
+        "limit": 50
+    });
+
+    const handleButtonClick = (period, event) => {
+        setSelectedPeriod(period);
+        
+        const currentDate = new Date();
+        let from, to;
+        
+        switch (period) {
+            case 'today':
+                from = currentDate.toISOString();
+                to = currentDate.toISOString();
+                break;
+            case 'month':
+                from = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString();
+                to = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString();
+                break;
+            case 'custom':
+                if (event) {
+                    setAnchorEl(event.currentTarget);
+                }
+                return;
+            default:
+                return;
+        }
+        
+        setFilterData(prev => ({
+            ...prev,
+            period: { from, to }
+        }));
+        
+        setAnchorEl(null);
+    };
+
+    const handleClose = () => {
+        if (startDate && endDate) {
+            setFilterData(prev => ({
+                ...prev,
+                period: {
+                    from: startDate.toISOString(),
+                    to: endDate.toISOString()
+                }
+            }));
+        }
+        setAnchorEl(null);
+    };
+
+    const open = Boolean(anchorEl);
+    const id = open ? 'date-range-popover' : undefined;
+
+    const getPeriodText = () => {
+        switch (selectedPeriod) {
+        case 'today':
+            return `${format(new Date(), 'dd.MM.yyyy')}`;
+        case 'month':
+            return `${format(new Date(), 'MMMM yyyy')}`;
+        case 'custom':
+            return `${format(startDate || new Date(), 'dd.MM.yyyy')} – ${format(endDate || new Date(), 'dd.MM.yyyy')}`;
+        default:
+            return '';
+        }
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFilterData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+        console.log(filterData);
+    };
+
+    const checkPrice = (min, max) => {
+        if (min !== '' || max !== ''){
+            if (parseInt(min) > parseInt(max)){
+                setFilterData(prev => ({
+                    ...prev,
+                    priceRange: {
+                        ...prev.priceRange,
+                        ['min']: parseInt(min),
+                        ['max']: parseInt(min),
+                    }
+                }));
+            }
+        }
+    }
+
+    const handlePriceChange = (type) => (e) => {
+        const { value } = e.target;
+        setFilterData(prev => ({
+            ...prev,
+            priceRange: {
+                ...prev.priceRange,
+                [type]: value
+            }
+        }));
+    };
+
+    const handleOkvedChange = (selectedCodes) => {
+        setFilterData(prev => ({
+            ...prev,
+            okvedCodes: selectedCodes
+        }));
+    };
+
+    const handleSocialObjectChange = (value) => {
+        setFilterData(prev => ({
+            ...prev,
+            socialFacilities: value
+        }));
+    };
+
+    const handleChangeSize = (e) => {
+        setIsFullWidth(!isFullWidth);
+    }
+
+    const handleSubmit = (e) => {
+        checkPrice(filterData.priceRange.min, filterData.priceRange.max);
+        console.log('submitted', filterData);
+        setIsFullWidth(false);
+    }
+
+    const handleGoToDashboard = (e) => {
+        console.log('ef')
+    }
+
+    return(
+        <>
+            <div className={styles.mainContainer}>
+                <div className={`${styles.filterFormContainer} ${isFullWidth ? styles.isfullwidth : ''}`}>
+                    <div className={styles.toolbar}>
+                        <div className={styles.dashboardButton}>
+                            <Button 
+                                onClick={handleGoToDashboard}
+                                startIcon={<PersonIcon sx={{color: '#fff', height: '0.75em', width: '0.75em'}} />}
+                                sx={{
+                                    height: '1em',
+                                    borderRadius: '8px',
+                                }}
+                            >
+                                <span className={styles.label} style={{fontSize: '12px', marginBottom: 0}}>Личный кабинет</span>
+                            </Button>
+                        </div>
+                        <div className={styles.logoContainer}>
+                            <img src={logo} alt="" className={styles.logoWhite} />
+                        </div>
+                    </div>
+                    <div className={`${styles.headerContainer} ${isFullWidth ? styles.fullwidth : ''}`}>
+                        <h1>Найти предложения</h1>
+                        <div className={styles.iconButton1}>
+                            {isFullWidth ? (
+                                <Button 
+                                    sx={{
+                                        backgroundColor: 'white',
+                                        color: '#005BB9',
+                                        height: '40px',
+                                        width: '140px',
+                                        borderRadius: '2em',
+                                        textTransform: 'none', 
+                                        transition: 'transform 0.3s ease-in-out',
+                                        '&:hover': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.58)',
+                                        color: '#005BB9',
+                                        },
+                                        '&:active': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.8)', 
+                                        },
+                                        padding: '8px 16px',
+                                        fontWeight: 600, 
+                                        boxShadow: 'none', 
+                                        '&:disabled': {
+                                        cursor: 'none',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.58)',
+                                        color: '#005BB9'
+                                        },
+                                    }}
+                                    onClick={handleSubmit}
+                                    disabled={!isFullWidth}
+                                >
+                                    Применить
+                                </Button>
+                            ) : (
+                                <IconButton className={styles.arrowButton} onClick={handleSubmit}>
+                                    <CheckIcon sx={{color: '#fff'}}></CheckIcon>
+                                </IconButton>
+                            )}
+                        </div>
+                        <div className={`${styles.iconButton} ${isFullWidth ? styles.rotated : ''}`}>
+                            <IconButton onClick={handleChangeSize}>
+                                <ArrowForwardIosIcon sx={{color: '#fff'}}></ArrowForwardIosIcon>
+                            </IconButton>
+                        </div>
+                    </div>
+                    <div className={styles.formContainer}>
+                    <div className={`${styles.form} ${isFullWidth ? styles.isfullwidth : ''}`}>
+                        <div className={styles.formBlock}>
+                            <div className={styles.input}>
+                                <TextField 
+                                    type="text"
+                                    name='proposalId'
+                                    value={filterData.proposalId}
+                                    onChange={handleInputChange}
+                                    label='Идентификатор предложения' 
+                                    fullWidth
+                                />
+                            </div>
+                            <div className={styles.input}>
+                                <TextField 
+                                    type="text"
+                                    name='contractorName'
+                                    value={filterData.contractorName}
+                                    onChange={handleInputChange}
+                                    label='Наименование подрядчика' 
+                                    fullWidth
+                                />
+                            </div>
+                            <div className={styles.input}>
+                                <TextField 
+                                    type="text"
+                                    name='contractorInn'
+                                    value={filterData.contractorInn}
+                                    onChange={handleInputChange}
+                                    label='ИНН подрядчика' 
+                                    fullWidth
+                                />
+                            </div>
+                            <div className={styles.input}>
+                                <TextField 
+                                    type="text"
+                                    name='proposalName'
+                                    value={filterData.proposalName}
+                                    onChange={handleInputChange}
+                                    label='Наименование предложения' 
+                                    fullWidth
+                                />
+                            </div>
+                            <div className={styles.inputSeparateConatainer}>
+                                <div className={styles.label}>Стоимость, руб</div>
+                                <div className={styles.inputSeparate}>
+                                    <TextField 
+                                        type="number"
+                                        name='priceMin'
+                                        value={filterData.priceRange.min}
+                                        placeholder='От'
+                                        onChange={handlePriceChange('min')}
+                                        sx={{
+                                            '& input[type="number"]': {
+                                            MozAppearance: 'textfield',
+                                            '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
+                                                WebkitAppearance: 'none',
+                                                margin: 0,
+                                            },
+                                            },
+                                        }}
+                                    />
+                                    <div className={styles.dash}>—</div>
+                                    <TextField 
+                                        type="number"
+                                        name='priceMax'
+                                        value={filterData.priceRange.max}
+                                        placeholder='До'
+                                        onChange={handlePriceChange('max')}
+                                        sx={{
+                                            '& input[type="number"]': {
+                                            MozAppearance: 'textfield',
+                                            '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
+                                                WebkitAppearance: 'none',
+                                                margin: 0,
+                                            },
+                                            },
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <div className={styles.formBlock}>
+                            <div className={styles.input}>
+                                <Selector 
+                                    type="obj"
+                                    single={false} 
+                                    dict={objects}
+                                    onSelectionChange={(e) => {
+                                        setFilterData(prev => ({
+                                            ...prev,
+                                            facilities: e
+                                        }));
+                                    }}
+                                    label='Объект' 
+                                    fullWidth
+                                />
+                            </div>
+                            <div className={styles.input}>
+                                <Selector 
+                                    type='okved'
+                                    dict={okvedDictionary}
+                                    single={false} 
+                                    label='ОКВЭД'
+                                    onSelectionChange={handleOkvedChange}
+                                    selectedCodes={filterData.okvedCodes}
+                                />
+                            </div>
+                            <div className={styles.input}>
+                                <Selector 
+                                    type='social'
+                                    label='Социальные объекты'
+                                    dict={socialObjects}
+                                    single={false} 
+                                    onSelectionChange={handleSocialObjectChange}
+                                />
+                            </div>
+                            <div className={styles.input}>
+                                <TextField 
+                                    type="text"
+                                    name='contractNumber'
+                                    value={filterData.contractNumber}
+                                    onChange={handleInputChange}
+                                    label='Номер договора' 
+                                    fullWidth
+                                />
+                            </div>
+                            <div className={styles.inputSeparateConatainer}>
+                                <div className={styles.label}>Период: {getPeriodText()}</div>
+                                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                                        <Box>
+                                                <div className={styles.inputDate}>
+                                                    <Button 
+                                                    onClick={() => handleButtonClick('today')}
+                                                    sx={selectedPeriod === 'today' ? {border: '1px solid #fff', color: '#fff'} : 'inherit'}
+                                                    >
+                                                    Сегодня
+                                                    </Button>
+                                                    <Button 
+                                                    onClick={() => handleButtonClick('month')}
+                                                    sx={selectedPeriod === 'month' ? {border: '1px solid #fff', color: '#fff'} : 'inherit'}
+                                                    >
+                                                    Текущий месяц
+                                                    </Button>
+                                                    <Button 
+                                                    onClick={(e) => handleButtonClick('custom', e)}
+                                                    sx={selectedPeriod === 'custom' ? {border: '1px solid #fff', color: '#fff'} : 'inherit'}
+                                                    >
+                                                    Свой период
+                                                    </Button>
+                                                </div>
+
+                                            <Popover
+                                            id={id}
+                                            open={open}
+                                            anchorEl={anchorEl}
+                                            onClose={handleClose}
+                                            anchorOrigin={{
+                                                vertical: 'bottom',
+                                                horizontal: 'left',
+                                            }}
+                                            >
+                                            <Box sx={{ p: 2, minWidth: 300 }}>
+                                                <Stack spacing={3}>
+                                                <DatePicker
+                                                    label="Дата начала"
+                                                    value={startDate}
+                                                    onChange={(newValue) => setStartDate(newValue)}
+                                                    renderInput={(params) => <TextField {...params} fullWidth />}
+                                                />
+                                                <DatePicker
+                                                    label="Дата окончания"
+                                                    value={endDate}
+                                                    onChange={(newValue) => setEndDate(newValue)}
+                                                    renderInput={(params) => <TextField {...params} fullWidth />}
+                                                    minDate={startDate}
+                                                />
+                                                <Button 
+                                                    variant="contained" 
+                                                    onClick={handleClose}
+                                                    disabled={!startDate || !endDate}
+                                                    sx={{color: '#fff', bgcolor: '#005BB9'}}
+                                                >
+                                                    Готово
+                                                </Button>
+                                                </Stack>
+                                            </Box>
+                                            </Popover>
+                                        </Box>
+                                    </LocalizationProvider>
+                                </div>
+                            </div>    
+                        </div>
+                    </div>
+                </div>
+                <div className={styles.offerListContainer}>
+                    <OfferCardComponent contractor={false}></OfferCardComponent>
+                    <OfferCardComponent contractor={false}></OfferCardComponent>
+                    <OfferCardComponent contractor={false}></OfferCardComponent>
+                    <OfferCardComponent contractor={false}></OfferCardComponent>
+                    <OfferCardComponent contractor={false}></OfferCardComponent>
+                    <OfferCardComponent contractor={false}></OfferCardComponent>
+                    <OfferCardComponent contractor={false}></OfferCardComponent>
+                    <OfferCardComponent contractor={false}></OfferCardComponent>
+                </div>
+            </div>
+        </>
+    );
+}

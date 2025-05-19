@@ -1,0 +1,225 @@
+.filterFormContainer {
+    width: 40%;
+    max-width: 35vw;
+    min-width: 35vw;
+    position: fixed;
+    left: 0;
+    background-color: #005BB9;
+    top: 0;
+    height: 100%;
+    padding-left: 2em;
+    padding-top: 1.5em;
+    box-sizing: border-box;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+}
+
+.filterFormContainer.isfullwidth{
+    width: 100%;
+    max-width: 100%;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.headerContainer {
+    margin-bottom: 2em;
+    color: #fff;
+    display: grid;
+    align-items: center;
+    box-sizing: border-box;
+    grid-template-columns: auto 40px 40px;
+    padding-right: 2em;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.headerContainer.fullwidth{
+    grid-template-columns: auto 160px 40px;
+}
+
+.iconButton {
+  transition: transform 0.3s ease-in-out;
+}
+
+.iconButton.rotated {
+  transform: rotate(180deg);
+}
+
+.input{
+    margin-bottom: 1em;
+    margin-right: 1em;
+}
+.formContainer{
+    height: 80vh;
+    overflow-y: auto;
+    margin-right: 1em;
+    overflow-x: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.formBlock{
+    width: 100%;
+}
+
+.form {
+    padding-top: 1em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.form .input {
+  min-width: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.form.isfullwidth{
+    display: grid;
+    grid-template-columns: 50% 50%;
+}
+.inputSeparateContainer{
+    width: 100%;
+    display: grid;
+    grid-template-rows: 2em auto;
+}
+.inputSeparate{
+    margin-bottom: 1em;
+    margin-right: 1em;
+    display: grid;
+    grid-template-columns: auto 2em auto;
+    column-gap: 2em;
+}
+.dash{
+    display: flex;
+    color: #fff;
+    align-items: center;
+    justify-content: center;
+    font-size: 1em;
+    font-weight: 400;
+}
+.label{
+    color: #fff;
+    font-size: 1em;
+    margin-bottom: 0.25em;
+}
+.inputDate{
+    display: grid;
+    grid-template-columns: auto auto auto;
+    margin-right: 1em;
+    column-gap: 1em;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #669DD5;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ffffffb7;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+}
+
+.offerListContainer{
+  position: absolute;
+  left: 35vw;
+  height: 100vh;
+  width: 65vw;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  top: 0;
+  z-index: -1000;
+  background-color: rgb(228, 228, 228);
+  
+}
+@media (max-width:80em) {
+  .filterFormContainer {
+    max-width: 4em;
+    min-width: 4em;
+    padding-left: 0.72em;
+    padding-top: 1em;
+  }
+  .offerListContainer {
+    left: 4em;
+    width: 100vw;
+    overflow-x: hidden;
+  }
+  .filterFormContainer.isfullwidth {
+    padding-left: 2em;
+    padding-top: 4em;
+  }
+  .filterFormContainer.isfullwidth .iconButton1 {
+    display:contents;
+  }
+  .filterFormContainer.isfullwidth .formContainer {
+    display:contents;
+  }
+  .filterFormContainer.isfullwidth .headerContainer h1 {
+    display:contents;
+  }
+  .filterFormContainer.isfullwidth .logoWhite {
+    display: flex;
+  }
+  .filterFormContainer.isfullwidth .dashboardButton {
+    display:flex;
+  }
+  .formContainer{
+    display: none;
+  }
+  .headerContainer h1 {
+    display: none;
+  }
+  .headerContainer {
+    grid-template-columns: 2em;
+    column-gap: 0;
+  }
+  .wrapper{
+      grid-template-columns: 100%;
+  }
+  .iconButton1{
+    display: none;
+  }
+  .dashboardButton{
+    display: none;
+  }
+  .logoWhite{
+    display: none;
+  }
+}
+
+.toolbar{
+  display: grid;
+  grid-template-columns: auto auto;
+}
+
+.logoWhite{
+  height: 1.25em;
+}
+.logoContainer{
+  margin: 0;
+  padding: 0;
+  margin-bottom: 1.5em;
+  top: 1.25em;
+  right: 2em;
+  align-items: center;
+  display: flex;
+  justify-content: right;
+  margin-right: 2em;
+}

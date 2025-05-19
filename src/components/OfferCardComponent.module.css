@@ -1,0 +1,210 @@
+.cardContainer{
+    padding: 2em;
+    width: 100%;
+    background-color: #fff;
+    margin-bottom: 0.5em;
+}
+h3{
+    padding: 0;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0.5em;
+}
+.columnContainer{
+    display: grid;
+    grid-template-columns: 45vw auto;
+    column-gap: 5vw;
+}
+.price {
+    display: flex;
+    align-items: center;
+}
+.mainText {
+    line-height: 1.5em;
+}
+
+
+/* Стили для popup-виджета */
+.popupOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  opacity: 1;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.popupContent {
+  background: white;
+  border-radius: 8px;
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 700px;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease-out;
+}
+
+.popupHeader {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8f9fa;
+  border-radius: 8px 8px 0 0;
+}
+
+.popupHeader h2 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.popupBody {
+  padding: 24px;
+}
+
+.detailsGrid {
+  display: grid;
+  gap: 24px;
+}
+
+.detailsSection {
+  background-color: #f8f9fa;
+  padding: 16px;
+  border-radius: 6px;
+  border-left: 4px solid #005BB9;
+}
+
+.detailsSection h3 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+:global(.MuiPopover-root) {
+  z-index: 100000 !important;
+}
+
+:global(.MuiMenu-root) {
+  z-index: 100000 !important;
+}
+
+:global(.MuiModal-root) {
+  z-index: 100000 !important;
+}
+
+:global(.MuiSelect-root .MuiMenu-paper) {
+  z-index: 100000 !important;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+  gap: 4px;
+}
+
+.detailItem:last-child {
+  margin-bottom: 0;
+}
+
+.detailLabel {
+  font-weight: 600;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.detailItem span:not(.detailLabel) {
+  color: #333;
+  line-height: 1.4;
+}
+
+.detailItem .price {
+  font-weight: 700;
+  color: #28a745;
+  font-size: 1.1rem;
+}
+
+/* Добавляем курсор pointer для карточки */
+.cardContainer {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cardContainer:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .popupContent {
+    width: 95vw;
+    margin: 20px;
+  }
+  
+  .popupHeader {
+    padding: 16px 20px;
+  }
+  
+  .popupBody {
+    padding: 20px;
+  }
+  
+  .detailItem {
+    flex-direction: column;
+  }
+}

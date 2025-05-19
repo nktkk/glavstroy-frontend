@@ -1,0 +1,32 @@
+.mainContainer {
+    display: grid;
+    justify-content: center;
+    row-gap: 2em;
+    margin-top: 4em;
+}
+
+.header {
+    justify-content: center;
+    display: flex;
+}
+
+.form {
+    width: 25em;
+    display: grid;
+    row-gap: 1em;
+}
+.formItem {
+    margin-bottom: 1em;
+}
+
+.formSubmitButton{
+    display: grid;
+}
+.registerSwitchBox{
+    justify-content: center;
+    display: flex;
+    font-size: 14px;
+}
+.MuiInputLabel-root {
+  z-index: 0 !important;
+}
