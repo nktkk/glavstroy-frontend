@@ -44,7 +44,17 @@ export default function DashboardContractor({ view }) {
     });
 
     const [offers] = useState([
-        // ... существующие предложения ...
+        {
+        'proposalName': 'asdasd', 
+        'contractorName': 'saddsa',
+        'fullProposalPrice': 'saddsa',
+        'contractorId': 'saddsa',
+        'contractorInn': 'sdadsa',
+        'okvedCode': 'sdadsa',
+        'facility': 'sdadsa',
+        'socialFacility': 'saddsa',
+        'description': 'sdadsa',
+        }
     ]);
 
     const validateEmail = (email) => {

@@ -13,6 +13,7 @@ import SocialObjectSelect from '../../components/SocialObjectsSelect.jsx';
 import OfferCardComponent from '../../components/OfferCardComponent.jsx';
 import okvedDictionary from '../../data/okved.jsx';
 import PersonIcon from '@mui/icons-material/Person';
+import { useNavigate } from 'react-router-dom';
 
 const socialObjects = {
   'Школа': 'Школа',
@@ -29,7 +30,6 @@ const objects = {
 
 const API_URL = 'http://localhost:8080/proposal-service/proposal/list';
 
-// API helper function
 const postData = async (url, data) => {
   try {
     const response = await fetch(url, {
@@ -63,6 +63,8 @@ export default function OfferList(){
     const [error, setError] = useState(null);
     const observer = useRef();
 
+    const navigate = useNavigate();
+
     const [filterData, setFilterData] = useState({
         "proposalId": '',
         "proposalName": '',
@@ -90,7 +92,6 @@ export default function OfferList(){
             setLoading(true);
             setError(null);
             
-            // If we're starting a new search, reset proposals and afterId
             const requestData = { ...filterData };
             if (isInitialLoad) {
                 requestData.afterId = '';
@@ -105,7 +106,6 @@ export default function OfferList(){
                 );
                 setHasMore(response.pageInfo?.hasMore || false);
                 
-                // Update afterId for pagination
                 if (response.pageInfo?.afterId) {
                     setFilterData(prev => ({
                         ...prev,
@@ -120,6 +120,15 @@ export default function OfferList(){
             setLoading(false);
         }
     };
+    useEffect(() => {
+        const currentDate = new Date();
+        const from = currentDate.toISOString();
+        const to = currentDate.toISOString();
+        setFilterData(prev => ({
+            ...prev,
+            period: { from, to }
+        }));
+    }, [])
 
     const handleButtonClick = (period, event) => {
         setSelectedPeriod(period);
@@ -237,12 +246,12 @@ export default function OfferList(){
     const handleSubmit = (e) => {
         checkPrice(filterData.priceRange.min, filterData.priceRange.max);
         setIsFullWidth(false);
-        fetchProposals(true); // true indicates a new search
+        fetchProposals(true);
+        console.log(filterData);
     }
 
     const handleGoToDashboard = (e) => {
-        console.log('Navigate to dashboard');
-        // Add navigation logic here
+        navigate('/dashboard/admin');
     }
 
     // Setup intersection observer for infinite scrolling
@@ -489,13 +498,20 @@ export default function OfferList(){
                                                 horizontal: 'left',
                                             }}
                                             >
-                                            <Box sx={{ p: 2, minWidth: 300 }}>
-                                                <Stack spacing={3}>
+                                            <Box sx={{ p: 2, minWidth: 300, zIndex: '99' }}>
+                                                <Stack spacing={3} sx={{zIndex: '-1' }}>
                                                 <DatePicker
                                                     label="Дата начала"
                                                     value={startDate}
                                                     onChange={(newValue) => setStartDate(newValue)}
                                                     renderInput={(params) => <TextField {...params} fullWidth />}
+                                                    slotProps={{
+                                                        popper: {
+                                                        sx: {
+                                                            zIndex: 999999, 
+                                                        },
+                                                        },
+                                                    }}
                                                 />
                                                 <DatePicker
                                                     label="Дата окончания"
@@ -503,6 +519,13 @@ export default function OfferList(){
                                                     onChange={(newValue) => setEndDate(newValue)}
                                                     renderInput={(params) => <TextField {...params} fullWidth />}
                                                     minDate={startDate}
+                                                    slotProps={{
+                                                        popper: {
+                                                        sx: {
+                                                            zIndex: 999999,
+                                                        },
+                                                        },
+                                                    }}
                                                 />
                                                 <Button 
                                                     variant="contained" 
@@ -525,7 +548,6 @@ export default function OfferList(){
                 <div className={styles.offerListContainer}>
                     {proposals.length > 0 ? (
                         proposals.map((proposal, index) => {
-                            // For the last element, attach the ref for infinite scrolling
                             if (proposals.length === index + 1) {
                                 return (
                                     <div ref={lastProposalElementRef} key={proposal.proposalId}>
@@ -546,8 +568,8 @@ export default function OfferList(){
                     
                     {loading && (
                         <div className={styles.loadingContainer}>
-                            <CircularProgress size={40} />
                             <p>Загрузка предложений...</p>
+                            <div className={styles.loadingIcon}><CircularProgress size={40} /></div>
                         </div>
                     )}
                     

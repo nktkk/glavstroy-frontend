@@ -13,6 +13,18 @@
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1;
 }
+.loadingContainer, .errorContainer, .noResults{
+  display: grid;
+  justify-content: center;
+  align-items: center;
+}
+.noResults, .loadingContainer{
+  margin-top: 4em;
+}
+.loadingIcon{
+  display: grid;
+  justify-content: center;
+}
 
 .filterFormContainer.isfullwidth{
     width: 100%;

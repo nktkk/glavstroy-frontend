@@ -5,6 +5,7 @@ import styles from './OfferCardComponent.module.css'
 import { Add } from '@mui/icons-material';
 import { createTheme } from '@mui/material/styles';
 import Selector from './Selector';
+import { useNavigate } from 'react-router-dom';
 
 const popupTheme = createTheme({
   components: {
@@ -140,14 +141,12 @@ function formatDateTime(dateTimeString) {
     }
 }
 
-function ProjectDetailsPopup({ cardData, isOpen, onClose, contractor, create }) {
-    if (!isOpen) return null;
-    
+function CreateForm({ onSubmit, onClose, contractorId }) {
     const [offer, setOffer] = useState({
         'proposalName': '', 
         'contractorName': '',
         'fullProposalPrice': '',
-        'contractorId': '',
+        'contractorId': contractorId || '',
         'contractorInn': '',
         'okvedCode': '',
         'facility': '',
@@ -240,221 +239,273 @@ function ProjectDetailsPopup({ cardData, isOpen, onClose, contractor, create }) 
         e.preventDefault();
         
         if (validateForm()) {
-            console.log('Форма валидна, данные:', offer);
-            onClose();
-            // Здесь можно добавить отправку данных
+            const newOffer = {
+                ...offer,
+                contractorId: contractorId
+            };
+            
+            console.log('Форма валидна, данные:', newOffer);
+            
+            try {
+                const response = await fetch('http://localhost:8081/dashboard/contractor/createProposal', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(newOffer),
+                });
+                    
+                if (response.ok) {
+                    console.log('Предложение успешно создано');
+                } else {
+                    console.error('Ошибка при создании предложения');
+                }
+                
+                onClose();
+            } catch (error) {
+                console.error('Ошибка при отправке предложения:', error);
+            }
         } else {
             console.log('Форма содержит ошибки');
         }
     };
 
-    const handleGoToContractor = (e) => {
-        console.log(cardData.contractorId);
-    }
+
+    return (
+        <ThemeProvider theme={popupTheme}>
+            <div className={styles.formBlock}>
+                <div className={styles.detailsSection}>
+                    <form onSubmit={handleSubmitOffer}>
+                        <div className={styles.detailItem}>
+                            <TextField 
+                                type="text"
+                                name='proposalName'
+                                value={offer.proposalName}
+                                onChange={handleOfferChange}
+                                label='Наименование предложения' 
+                                fullWidth
+                                error={!!errors.proposalName}
+                                helperText={errors.proposalName}
+                            />
+                        </div>
+                        <div className={styles.detailItem}>
+                            <TextField 
+                                type="text"
+                                name='description'
+                                value={offer.description}
+                                onChange={handleOfferChange}
+                                label='Описание' 
+                                fullWidth
+                                multiline
+                                sx={{
+                                    '& input':{
+                                        fontFamily: 'Montserrat'
+                                    }
+                                }}
+                                rows={4}
+                                error={!!errors.description}
+                                helperText={errors.description}
+                            />
+                        </div>
+                        <div className={styles.detailItem}>
+                            <Selector 
+                                type="obj"
+                                single={true} 
+                                dict={objects}
+                                onSelectionChange={(value) => handleSelectionChange('facility', value)}
+                                label='Объект' 
+                                fullWidth
+                                error={!!errors.facility}
+                                helperText={errors.facility}
+                            />
+                            <FormHelperText error={!!errors.facility}>{errors.facility}</FormHelperText>
+                        </div>
+                        <div className={styles.detailItem}>
+                            <Selector 
+                                type='social'
+                                label='Социальный объект'
+                                dict={socialObjects}
+                                single={true} 
+                                onSelectionChange={(value) => handleSelectionChange('socialFacility', value)}
+                                error={!!errors.socialFacility}
+                                helperText={errors.socialFacility}
+                            />
+                            <FormHelperText error={!!errors.socialFacility}>{errors.socialFacility}</FormHelperText>
+                        </div>
+                        <div className={styles.detailItem}>
+                            <TextField 
+                                type="text"
+                                name='fullProposalPrice'
+                                value={offer.fullProposalPrice}
+                                onChange={handleOfferChange}
+                                label='Стоимость, руб' 
+                                fullWidth
+                                error={!!errors.fullProposalPrice}
+                                helperText={errors.fullProposalPrice}
+                            />
+                        </div>
+                    
+                        <div className={styles.detailItem}>
+                            <Button
+                                type="submit"
+                                sx={{
+                                    color: '#f8f9fa',
+                                    bgcolor: ' #005BB9',
+                                    border: '1px solid #f8f9fa',
+                                    borderRadius: '8px',
+                                    maxWidth: '10em',
+                                    height: '3em',
+                                    '&:hover': {
+                                        bgcolor: '#005cb9c4',
+                                        color: '#fff',
+                                        border: '1px solid #f8f9fa',
+                                    }
+                                }}
+                            >
+                                Создать
+                            </Button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </ThemeProvider>
+    );
+}
+
+function DetailView({ cardData, onClose, contractor }) {
+    const navigate = useNavigate();
+    
+    const handleGoToContractor = () => {
+        // Перенаправляем пользователя на страницу подрядчика
+        navigate(`/contractor/${cardData.contractorId}`);
+        onClose();
+    };
+    
+    return (
+        <>
+            <div className={styles.detailsSection}>
+                <h3>Основная информация</h3>
+                <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>ID проекта:</span>
+                    <span>{cardData.proposalId}</span>
+                </div>
+                <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Описание:</span>
+                    <span>{cardData.description}</span>
+                </div>
+                <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Объект:</span>
+                    <span>{cardData.facility}</span>
+                </div>
+                <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Социальный объект:</span>
+                    <span>{cardData.socialFacility}</span>
+                </div>
+                <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Стоимость проекта:</span>
+                    <span className={styles.price}>{cardData.fullProposalPrice} руб</span>
+                </div>
+            </div>
+
+            <div className={styles.detailsSection}>
+                <h3>Подрядчик</h3>
+                <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Название:</span>
+                    <span>{cardData.contractorName}</span>
+                </div>
+                <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>ИНН:</span>
+                    <span>{cardData.contractorInn}</span>
+                </div>
+                <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>ОКВЭД:</span>
+                    <span>{cardData.okvedCode}</span>
+                </div>
+                <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>ID подрядчика:</span>
+                    <span>{cardData.contractorId}</span>
+                </div>
+                {contractor ? (<></>) : (
+                    <div className={styles.detailItem}>
+                        <Button
+                            onClick={handleGoToContractor}
+                            sx={{
+                                color: '#f8f9fa',
+                                bgcolor: ' #005BB9',
+                                border: '1px solid #f8f9fa',
+                                borderRadius: '8px',
+                                maxWidth: '10em',
+                                height: '3em',
+                                '&:hover': {
+                                    bgcolor: '#005cb9c4',
+                                    color: '#fff',
+                                    border: '1px solid #f8f9fa',
+                                }
+                            }}
+                        >
+                            Подробнее
+                        </Button>
+                    </div>
+                )}
+            </div>
+
+            <div className={styles.detailsSection}>
+                <h3>Даты</h3>
+                <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Создано:</span>
+                    <span>{formatDateTime(cardData.createdAt)}</span>
+                </div>
+                <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Обновлено:</span>
+                    <span>{formatDateTime(cardData.updatedAt)}</span>
+                </div>
+            </div>
+
+            {cardData.priceListFileUrl && (
+                <div className={styles.detailsSection}>
+                    <h3>Документы</h3>
+                    <div className={styles.detailItem}>
+                        <Link href={cardData.priceListFileUrl} target="_blank" rel="noopener noreferrer">
+                            Прайс-лист
+                        </Link>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
+function ProjectDetailsPopup({ cardData, isOpen, onClose, contractor, create, contractorId }) {
+    const handleSubmitOffer = (offerData) => {
+        console.log("Отправляем предложение:", offerData);
+        // Здесь можно добавить логику для отправки данных на сервер
+    };
+    
+    if (!isOpen) return null;
 
     return createPortal(
         <div className={styles.popupOverlay} onClick={create ? null : onClose}>
             <div className={styles.popupContent} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.popupHeader}>
-                    <h2>Новое предложение</h2>
+                    <h2>{create ? 'Новое предложение' : cardData.proposalName}</h2>
                     <button className={styles.closeButton} onClick={onClose}>×</button>
                 </div>
                 
                 <div className={styles.popupBody}>
                     <div className={styles.detailsGrid}>
                         {create ? (
-                            <>
-                                <ThemeProvider theme={popupTheme}>
-                                    <div className={styles.formBlock}>
-                                        <div className={styles.detailsSection}>
-                                            <form onSubmit={handleSubmitOffer}>
-                                                <div className={styles.detailItem}>
-                                                    <TextField 
-                                                        type="text"
-                                                        name='proposalName'
-                                                        value={offer.proposalName}
-                                                        onChange={handleOfferChange}
-                                                        label='Наименование предложения' 
-                                                        fullWidth
-                                                        error={!!errors.proposalName}
-                                                        helperText={errors.proposalName}
-                                                    />
-                                                </div>
-                                                <div className={styles.detailItem}>
-                                                    <TextField 
-                                                        type="text"
-                                                        name='description'
-                                                        value={offer.description}
-                                                        onChange={handleOfferChange}
-                                                        label='Описание' 
-                                                        fullWidth
-                                                        multiline
-                                                        sx={{
-                                                            '& input':{
-                                                                fontFamily: 'Montserrat'
-                                                            }
-                                                        }}
-                                                        rows={4}
-                                                        error={!!errors.description}
-                                                        helperText={errors.description}
-                                                    />
-                                                </div>
-                                                <div className={styles.detailItem}>
-                                                    <Selector 
-                                                        type="obj"
-                                                        single={true} 
-                                                        dict={objects}
-                                                        onSelectionChange={(value) => handleSelectionChange('facility', value)}
-                                                        label='Объект' 
-                                                        fullWidth
-                                                        error={!!errors.facility}
-                                                        helperText={errors.facility}
-                                                    />
-                                                    <FormHelperText error={!!errors.facility}>{errors.facility}</FormHelperText>
-                                                </div>
-                                                <div className={styles.detailItem}>
-                                                    <Selector 
-                                                        type='social'
-                                                        label='Социальный объект'
-                                                        dict={socialObjects}
-                                                        single={true} 
-                                                        onSelectionChange={(value) => handleSelectionChange('socialFacility', value)}
-                                                        error={!!errors.socialFacility}
-                                                        helperText={errors.socialFacility}
-                                                    />
-                                                    <FormHelperText error={!!errors.socialFacility}>{errors.socialFacility}</FormHelperText>
-                                                </div>
-                                                <div className={styles.detailItem}>
-                                                    <TextField 
-                                                        type="text"
-                                                        name='fullProposalPrice'
-                                                        value={offer.fullProposalPrice}
-                                                        onChange={handleOfferChange}
-                                                        label='Стоимость, руб' 
-                                                        fullWidth
-                                                        error={!!errors.fullProposalPrice}
-                                                        helperText={errors.fullProposalPrice}
-                                                    />
-                                                </div>
-                                            
-                                                <div className={styles.detailItem}>
-                                                    <Button
-                                                        type="submit"
-                                                        sx={{
-                                                            color: '#f8f9fa',
-                                                            bgcolor: ' #005BB9',
-                                                            border: '1px solid #f8f9fa',
-                                                            borderRadius: '8px',
-                                                            maxWidth: '10em',
-                                                            height: '3em',
-                                                            '&:hover': {
-                                                                bgcolor: '#005cb9c4',
-                                                                color: '#fff',
-                                                                border: '1px solid #f8f9fa',
-                                                            }
-                                                        }}
-                                                    >
-                                                        Создать
-                                                    </Button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </ThemeProvider>
-                            </>
+                            <CreateForm 
+                                onSubmit={handleSubmitOffer} 
+                                onClose={onClose} 
+                                contractorId={contractorId} 
+                            />
                         ) : (
-                            <>
-                                <div className={styles.detailsSection}>
-                                <h3>Основная информация</h3>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>ID проекта:</span>
-                                    <span>{cardData.proposalId}</span>
-                                </div>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>Описание:</span>
-                                    <span>{cardData.description}</span>
-                                </div>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>Объект:</span>
-                                    <span>{cardData.facility}</span>
-                                </div>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>Социальный объект:</span>
-                                    <span>{cardData.socialFacility}</span>
-                                </div>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>Стоимость проекта:</span>
-                                    <span className={styles.price}>{cardData.fullProposalPrice} руб</span>
-                                </div>
-                            </div>
-
-                            <div className={styles.detailsSection}>
-                                <h3>Подрядчик</h3>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>Название:</span>
-                                    <span>{cardData.contractorName}</span>
-                                </div>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>ИНН:</span>
-                                    <span>{cardData.contractorInn}</span>
-                                </div>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>ОКВЭД:</span>
-                                    <span>{cardData.okvedCode}</span>
-                                </div>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>ID подрядчика:</span>
-                                    <span>{cardData.contractorId}</span>
-                                </div>
-                                {contractor ? (<></>) : (
-                                    <div className={styles.detailItem}>
-                                        <Button
-                                            onClick={handleGoToContractor}
-                                            sx={{
-                                                color: '#f8f9fa',
-                                                bgcolor: ' #005BB9',
-                                                border: '1px solid #f8f9fa',
-                                                borderRadius: '8px',
-                                                maxWidth: '10em',
-                                                height: '3em',
-                                                '&:hover': {
-                                                    bgcolor: '#005cb9c4',
-                                                    color: '#fff',
-                                                    border: '1px solid #f8f9fa',
-                                                }
-                                            }}
-                                        >
-                                            Подробнее
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className={styles.detailsSection}>
-                                <h3>Даты</h3>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>Создано:</span>
-                                    <span>{formatDateTime(cardData.createdAt)}</span>
-                                </div>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>Обновлено:</span>
-                                    <span>{formatDateTime(cardData.updatedAt)}</span>
-                                </div>
-                            </div>
-
-                            {cardData.priceListFileUrl && (
-                                <div className={styles.detailsSection}>
-                                    <h3>Документы</h3>
-                                    <div className={styles.detailItem}>
-                                        <Link href={cardData.priceListFileUrl} target="_blank" rel="noopener noreferrer">
-                                            Прайс-лист
-                                        </Link>
-                                    </div>
-                                </div>
-                            )}
-                            </>
+                            <DetailView 
+                                cardData={cardData} 
+                                onClose={onClose} 
+                                contractor={contractor} 
+                            />
                         )}
-                        
                     </div>
                 </div>
             </div>
@@ -463,7 +514,7 @@ function ProjectDetailsPopup({ cardData, isOpen, onClose, contractor, create }) 
     );
 }
 
-export default function OfferCardComponent({cardData, contractor, create}) {
+export default function OfferCardComponent({cardData, contractor, create, contractorId}) {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
 
     const handleCardClick = () => {
@@ -506,6 +557,7 @@ export default function OfferCardComponent({cardData, contractor, create}) {
                 onClose={handleClosePopup}
                 contractor={contractor}
                 create={create}
+                contractorId={contractorId}
             />
         </>
     );
