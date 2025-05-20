@@ -323,16 +323,20 @@ export default function DataContractor() {
         formDataToSend.append('request', new Blob(
             [JSON.stringify(jsonData)],
             { type: 'application/json' }
-        ));
+        ), 'data.json');
         
         // 4. Добавляем файлы
         if (revenueFile) formDataToSend.append('revenueFile', revenueFile);
         if (contractFile) formDataToSend.append('contractFile', contractFile);
 
         try {
-            const response = await post('http://localhost:8081/dashboard/contractor/createProfile', 
-                formDataToSend
-            );
+            const response = await fetch('http://localhost:8081/dashboard/contractor/createProfile', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                },
+                body: formDataToSend
+            });
 
             if (!response.ok) {
                 throw new Error(`Ошибка: ${response.status}`);

@@ -8,6 +8,7 @@ import Selector from './Selector';
 import { useNavigate } from 'react-router-dom';
 import { useApiService } from "../services/apiService";
 import { styled } from '@mui/material/styles';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 
 const VisuallyHiddenInput = styled('input')({
@@ -375,6 +376,38 @@ function CreateForm({ onSubmit, onClose, contractorId }) {
                                 helperText={errors.fullProposalPrice}
                             />
                         </div>
+                        <div className={styles.detailItem}>
+                            <Button
+                                            component="label"
+                                            role={undefined}
+                                            variant="contained"
+                                            tabIndex={-1}
+                                            endIcon={priceListFile ? null : <CloudUploadIcon />}
+                                            sx={{
+                                                color: '#333333',
+                                                bgcolor: ' #f8f9fa',
+                                                borderRadius: '8px',
+                                                '&:hover': {
+                                                    bgcolor: '#005cb9c4',
+                                                    color: '#fff',
+                                                    border: '1px solid #f8f9fa',
+                                                }
+                                            }}
+                                        >
+                                            {priceListFile ? (
+                                                <div className={styles.offerText}>
+                                                    Файл прайс-листа: <div style={{fontWeight: 500}}>{priceListFile.name}</div>
+                                                </div>
+                                            ) : (
+                                                <>Файл прайс-листа (файл excel)</>
+                                            )}
+                                            <VisuallyHiddenInput
+                                                type="file"
+                                                onChange={handlePriceListChange}
+                                                accept=".xlsx, .xls"
+                                            />
+                                        </Button>
+                        </div>
                     
                         <div className={styles.detailItem}>
                             <Button
@@ -396,35 +429,7 @@ function CreateForm({ onSubmit, onClose, contractorId }) {
                                 Создать
                             </Button>
                         </div>
-                        <div className={styles.detailItem}>
-                            <Button
-                                            component="label"
-                                            role={undefined}
-                                            variant="contained"
-                                            tabIndex={-1}
-                                            endIcon={priceListFile ? null : <CloudUploadIcon />}
-                                            sx={{
-                                                display: 'flex',
-                                                justifyContent: 'left',
-                                                borderColor: errors.revenueFile ? '#d32f2f' : undefined,
-                                                color: errors.revenueFile ? '#d32f2f' : undefined,
-                                                marginTop: '10px'
-                                            }}
-                                        >
-                                            {revenueFile ? (
-                                                <div className={styles.offerText}>
-                                                    Файл выручки: <div style={{fontWeight: 500}}>{revenueFile.name}</div>
-                                                </div>
-                                            ) : (
-                                                <>Файл выручки (файл excel)</>
-                                            )}
-                                            <VisuallyHiddenInput
-                                                type="file"
-                                                onChange={handlePriceListChange}
-                                                accept=".xlsx, .xls"
-                                            />
-                                        </Button>
-                        </div>
+                        
                     </form>
                 </div>
             </div>

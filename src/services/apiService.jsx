@@ -38,7 +38,7 @@ export const useApiService = () => {
           ...getAuthHeaders(),
           ...options.headers,
         },
-        body: JSON.stringify(data),
+        body: data,
         ...options
       };
       
