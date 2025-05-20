@@ -274,11 +274,11 @@ function CreateForm({ onSubmit, onClose, contractorId }) {
         const jsonData = {
             'proposalName': offer.proposalName, 
             'fullProposalPrice': offer.fullProposalPrice,
-            'contractorId': contractorId || '',
+            'contractorId': contractorId || '', 
             'okvedCode': offer.okvedCode,
-            'facility': offer.facility,
+            'facility': offer.facility, 
             'socialFacility': offer.socialFacility,
-            'description': offer.description,
+            'description': offer.description, 
         };
 
         // 2. Создаем FormData для отправки
