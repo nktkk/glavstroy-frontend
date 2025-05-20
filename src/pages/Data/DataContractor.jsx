@@ -28,7 +28,8 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 export default function DataContractor() {
-    const [file, setFile] = useState(null);
+    const [revenueFile, setRevenueFile] = useState(null);
+    const [contractFile, setContractFile] = useState(null);
     const { post } = useApiService();
     const navigate = useNavigate();
     const [responseError, setResponseError] = useState('');
@@ -60,7 +61,10 @@ export default function DataContractor() {
         'foundedAt': '',
         'address': '',
         'taxForm': '',
-        'okvedCode': ''
+        'okvedCode': '',
+        'file': '',
+        'revenueFile': '',
+        'contractFile': ''
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,13 +111,24 @@ export default function DataContractor() {
         }
     };
 
-    const handleFileChange = (event) => {
+    const handleRevenueFileChange = (event) => {
         const selectedFile = event.target.files[0];
-        setFile(selectedFile);
-        if (errors.file) {
+        setRevenueFile(selectedFile);
+        if (errors.revenueFile) {
             setErrors({
                 ...errors,
-                file: ''
+                revenueFile: ''
+            });
+        }
+    };
+
+    const handleContractFileChange = (event) => {
+        const selectedFile = event.target.files[0];
+        setContractFile(selectedFile);
+        if (errors.contractFile) {
+            setErrors({
+                ...errors,
+                contractFile: ''
             });
         }
     };
@@ -162,6 +177,13 @@ export default function DataContractor() {
         if (date > currentDate) return false;
         
         return true;
+    };
+
+    const validateExcelFile = (file) => {
+        if (!file) return false;
+        
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        return fileExtension === 'xlsx' || fileExtension === 'xls';
     };
 
     const validateForm = () => {
@@ -252,15 +274,17 @@ export default function DataContractor() {
             isValid = false;
         }
 
-        if (!file) {
-            newErrors.file = 'Загрузите коммерческое предложение';
+        if (!revenueFile) {
+            newErrors.revenueFile = 'Загрузите файл выручки';
             isValid = false;
-        } else {
-            const fileExtension = file.name.split('.').pop().toLowerCase();
-            if (fileExtension !== 'xlsx' && fileExtension !== 'xls') {
-                newErrors.file = 'Загрузите файл в формате Excel (.xlsx или .xls)';
-                isValid = false;
-            }
+        } else if (!validateExcelFile(revenueFile)) {
+            newErrors.revenueFile = 'Загрузите файл в формате Excel (.xlsx или .xls)';
+            isValid = false;
+        }
+
+        if (!contractFile) {
+            newErrors.contractFile = 'Загрузите файл контракта';
+            isValid = false;
         }
 
         setErrors(newErrors);
@@ -269,36 +293,62 @@ export default function DataContractor() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        event.preventDefault();
         setIsSubmitting(true);
         setResponseError('');
         setResponseSuccess('');
-        setIsSubmitting(true);
 
         if (!validateForm()) {
             setIsSubmitting(false);
             return;
         }
+
         try {
-            const response = await post('http://localhost:8081/dashboard/contractor/createProfile', formData);
+            // Создаем FormData для отправки файлов
+            const formDataToSend = new FormData();
+
+            // Добавляем все текстовые поля в JSON (если сервер ожидает JSON)
+            const jsonData = { ...formData };
+            
+            // Форматируем дату, если она есть
+            if (jsonData.foundedAt) {
+                jsonData.foundedAt = format(jsonData.foundedAt, 'yyyy-MM-dd');
+            }
+
+            // Добавляем JSON-данные как отдельное поле (если сервер принимает такую структуру)
+            formDataToSend.append('request', JSON.stringify(jsonData));
+
+            // Добавляем файлы в FormData
+            if (revenueFile) formDataToSend.append('revenueFile', revenueFile);
+            if (contractFile) formDataToSend.append('contractFile', contractFile);
+
+            const response = await fetch('http://localhost:8081/dashboard/contractor/createProfile', {
+                method: 'POST',
+                body: formDataToSend,
+                // Заголовки не нужны, браузер сам установит `multipart/form-data` с границей
+            });
+
+            if (!response.ok) {
+                throw new Error(`Ошибка: ${response.status}`);
+            }
+
             setResponseSuccess('Профиль успешно создан');
             setFormData({
-                'identificationNumber': '',
-                'contractorName': '',
-                'contractorFullName': '',
-                'contractorDescription': '',
-                'email': '',
-                'phoneNumber': '',
-                'kpp': '', 
-                'inn': '',
-                'foundedAt': '',
-                'address': '',
-                'taxForm': '',
-                'okvedCode': ''
+                identificationNumber: '',
+                contractorName: '',
+                contractorFullName: '',
+                contractorDescription: '',
+                email: '',
+                phoneNumber: '',
+                kpp: '',
+                inn: '',
+                foundedAt: '',
+                address: '',
+                taxForm: '',
+                okvedCode: '',
             });
-            setFile(null);
+            setRevenueFile(null);
+            setContractFile(null);
             navigate('/dashboard/contractor');
-            console.log('Успешный ответ:', response);
         } catch (err) {
             setResponseError(err.message || 'Произошла ошибка при создании профиля');
             console.error('Ошибка при создании профиля:', err);
@@ -543,30 +593,66 @@ export default function DataContractor() {
                                             role={undefined}
                                             variant="contained"
                                             tabIndex={-1}
-                                            endIcon={file ? null : <CloudUploadIcon />}
+                                            endIcon={revenueFile ? null : <CloudUploadIcon />}
                                             sx={{
                                                 display: 'flex',
                                                 justifyContent: 'left',
-                                                borderColor: errors.file ? '#d32f2f' : undefined,
-                                                color: errors.file ? '#d32f2f' : undefined
+                                                borderColor: errors.revenueFile ? '#d32f2f' : undefined,
+                                                color: errors.revenueFile ? '#d32f2f' : undefined,
+                                                marginTop: '10px'
                                             }}
                                         >
-                                            {file ? (
+                                            {revenueFile ? (
                                                 <div className={styles.offerText}>
-                                                    Актуальное коммерческое предложение: <div style={{fontWeight: 500}}>{file.name}</div>
+                                                    Файл выручки: <div style={{fontWeight: 500}}>{revenueFile.name}</div>
                                                 </div>
                                             ) : (
-                                                <>Актуальное коммерческое предложение (файл excel)</>
+                                                <>Файл выручки (файл excel)</>
                                             )}
                                             <VisuallyHiddenInput
                                                 type="file"
-                                                onChange={handleFileChange}
+                                                onChange={handleRevenueFileChange}
                                                 accept=".xlsx, .xls"
                                             />
                                         </Button>
-                                        {errors.file && (
+                                        {errors.revenueFile && (
                                             <div className="error-text" style={{ color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px' }}>
-                                                {errors.file}
+                                                {errors.revenueFile}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className={styles.formItemFile}>
+                                        <Button
+                                            component="label"
+                                            role={undefined}
+                                            variant="contained"
+                                            tabIndex={-1}
+                                            endIcon={contractFile ? null : <CloudUploadIcon />}
+                                            sx={{
+                                                display: 'flex',
+                                                justifyContent: 'left',
+                                                borderColor: errors.contractFile ? '#d32f2f' : undefined,
+                                                color: errors.contractFile ? '#d32f2f' : undefined,
+                                                marginTop: '10px'
+                                            }}
+                                        >
+                                            {contractFile ? (
+                                                <div className={styles.offerText}>
+                                                    Файл контракта: <div style={{fontWeight: 500}}>{contractFile.name}</div>
+                                                </div>
+                                            ) : (
+                                                <>Файл контракта</>
+                                            )}
+                                            <VisuallyHiddenInput
+                                                type="file"
+                                                onChange={handleContractFileChange}
+                                            />
+                                        </Button>
+                                        {errors.contractFile && (
+                                            <div className="error-text" style={{ color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px' }}>
+                                                {errors.contractFile}
                                             </div>
                                         )}
                                     </div>

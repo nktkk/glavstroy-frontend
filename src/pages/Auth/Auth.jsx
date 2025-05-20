@@ -76,9 +76,9 @@ export default function Auth(){
 
     const getRoleBasedPath = (role) => {
         switch (role) {
-            case 'Admin':
+            case 'ADMIN':
                 return '/data/admin';
-            case 'Contractor':
+            case 'CONTRACTOR':
                 return '/data/contractor';
             default:
                 return '/login';
