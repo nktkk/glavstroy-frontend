@@ -272,35 +272,63 @@ function CreateForm({ onSubmit, onClose, contractorId }) {
     };
 
     const handleSubmitOffer = async (e) => {
-        e.preventDefault();
+    e.preventDefault();
+    
+    if (validateForm()) {
+        // 1. Создаем JSON-данные из полей формы
+        const jsonData = {
+            'proposalName': offer.proposalName, 
+            'contractorName': offer.contractorName,
+            'fullProposalPrice': offer.fullProposalPrice,
+            'contractorId': contractorId || '',
+            'contractorInn': offer.contractorInn,
+            'okvedCode': offer.okvedCode,
+            'facility': offer.facility,
+            'socialFacility': offer.socialFacility,
+            'description': offer.description,
+        };
+
+        // 2. Создаем FormData для отправки
+        const formDataToSend = new FormData();
         
-        if (validateForm()) {
-            const formData = new FormData();
-            
-            // Добавляем все поля формы
-            Object.keys(offer).forEach(key => {
-                formData.append(key, offer[key]);
-            });
-            
-            // Добавляем файл прайс-листа
-            formData.append('priceListFile', priceListFile);
-            
-            try {
-                const response = await post('http://localhost:8081/dashboard/contractor/createProposal', formData,);
-                    
-                if (response.ok) {
-                    console.log('Предложение успешно создано');
-                    onClose();
-                } else {
-                    console.error('Ошибка при создании предложения');
-                }
-            } catch (error) {
-                console.error('Ошибка при отправке предложения:', error);
-            }
-        } else {
-            console.log('Форма содержит ошибки');
+        // 3. Добавляем JSON как Blob с правильным типом контента
+        formDataToSend.append('request', new Blob(
+            [JSON.stringify(jsonData)],
+            { type: 'application/json' }
+        ), 'data.json');
+        
+        // 4. Добавляем файл прайс-листа
+        if (priceListFile) {
+            formDataToSend.append('priceListFile', priceListFile);
         }
-    };
+        
+        try {
+            const response = await fetch('http://localhost:8081/dashboard/contractor/createProposal', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                },
+                body: formDataToSend
+            });
+                
+            if (response.ok) {
+                console.log('Предложение успешно создано');
+                // Сбрасываем значения формы или делаем другие действия при успешном создании
+                onClose();
+            } else {
+                const errorData = await response.json().catch(() => null);
+                const errorMessage = errorData?.message || `Ошибка при создании предложения: ${response.status}`;
+                console.error(errorMessage);
+                // Показываем ошибку пользователю если необходимо
+            }
+        } catch (error) {
+            console.error('Ошибка при отправке предложения:', error);
+            // Показываем пользователю сообщение об ошибке
+        }
+    } else {
+        console.log('Форма содержит ошибки');
+    }
+};
 
 
     return (

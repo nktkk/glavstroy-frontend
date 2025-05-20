@@ -54,7 +54,7 @@ function App() {
                 </ThemeProvider>
               </ProtectedRoute>
             } />
-            <Route path='/dashboard/contractor/' element={
+            <Route path='/dashboard/contractor/:contractorId' element={
               <ProtectedRoute requiredRole="CONTRACTOR">
                 <ThemeProvider theme={formThemes.offerFormTheme}>
                   <DashboardContractor view={false}/>

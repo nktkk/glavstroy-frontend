@@ -1,32 +1,38 @@
-import React, { useState } from 'react';
-import { TextField, Button, IconButton } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { TextField, Button, IconButton, CircularProgress } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import styles from './Dashboard.module.css';
 import OfferCardComponent from '../../components/OfferCardComponent.jsx';
 import Selector from '../../components/Selector.jsx';
 import okvedDictionary from '../../data/okved.jsx';
 import { Block, Cancel, Check, Edit, LockOpen } from '@mui/icons-material';
+import { useParams, useNavigate } from 'react-router-dom';
 
 export default function DashboardContractor({ view }) {
+    const {contractorId} = useParams();
     const [edit, setEdit] = useState(false);
     const [block, setBlock] = useState(false);
     const [reason, setReason] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [contractorData, setContractorData] = useState({
-        identificationNumber: '9729219090',
-        contractorName: "ООО СтройГрад",
-        contractorFullName: "Общество с ограниченной ответственностью «СтройГрад»",
-        contractorDescription: "Строительство жилых и нежилых зданий",
-        email: "contact@stroygrad.ru",
-        phoneNumber: "+7 (495) 123-45-67",
-        kpp: "123456789",
-        inn: "9729219090",
-        foundedAt: "2020-03-15",
-        address: "г. Москва, ул. Строительная, д. 15",
-        taxForm: "ОСН",
-        okvedCode: "43.21",
+        identificationNumber: '',
+        contractorName: "",
+        contractorFullName: "",
+        contractorDescription: "",
+        email: "",
+        phoneNumber: "",
+        kpp: "",
+        inn: "",
+        foundedAt: "",
+        address: "",
+        taxForm: "",
+        okvedCode: "",
         isBlocked: false,
-        blockedReason: 'Сосал бибу ыва  аыв аыв аыв ав ыа выаыв аыв аа в ав ыа выа  авы аыв аыв аыв ав а'
+        blockedReason: ''
     });
+
+    const [offers, setOffers] = useState([]);
 
     const [errors, setErrors] = useState({
         identificationNumber: '',
@@ -43,19 +49,62 @@ export default function DashboardContractor({ view }) {
         okvedCode: '',
     });
 
-    const [offers] = useState([
-        {
-        'proposalName': 'asdasd', 
-        'contractorName': 'saddsa',
-        'fullProposalPrice': 'saddsa',
-        'contractorId': 'saddsa',
-        'contractorInn': 'sdadsa',
-        'okvedCode': 'sdadsa',
-        'facility': 'sdadsa',
-        'socialFacility': 'saddsa',
-        'description': 'sdadsa',
+    // Fetch contractor data when component mounts
+    useEffect(() => {
+        fetchContractorData();
+    }, []);
+
+    const fetchContractorData = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch('http://localhost:8081/contractor/getProfile', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({"contractorId": contractorId})
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // Update contractorData state with fetched data
+            if (data.contractor) {
+                setContractorData({
+                    publicId: data.contractor.publicId || '',
+                    identificationNumber: data.contractor.identificationNumber || '',
+                    contractorName: data.contractor.contractorName || '',
+                    contractorFullName: data.contractor.contractorFullName || '',
+                    contractorDescription: data.contractor.contractorDescription || '',
+                    email: data.contractor.email || '',
+                    phoneNumber: data.contractor.phoneNumber || '',
+                    kpp: data.contractor.kpp || '',
+                    inn: data.contractor.inn || '',
+                    foundedAt: data.contractor.foundedAt || '',
+                    address: data.contractor.address || '',
+                    taxForm: data.contractor.taxForm || '',
+                    okvedCode: data.contractor.okvedCode || '',
+                    isBlocked: data.contractor.isBlocked || false,
+                    blockedReason: data.contractor.blockedReason || ''
+                });
+            }
+            
+            // Update offers state with fetched proposals
+            if (data.proposalList && data.proposalList.proposals) {
+                setOffers(data.proposalList.proposals);
+            }
+            
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching contractor data:', error);
+            setError(error.message);
+            setLoading(false);
         }
-    ]);
+    };
 
     const validateEmail = (email) => {
         const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
@@ -185,10 +234,35 @@ export default function DashboardContractor({ view }) {
         return isValid;
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (validateForm()) {
-            console.log('Сохранение данных:', contractorData);
-            setEdit(false)
+            try {
+                setLoading(true);
+                const response = await fetch('http://localhost:8081/contractor/updateProfile', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(contractorData),
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Данные успешно обновлены:', data);
+                setEdit(false);
+                
+                // Refresh contractor data after update
+                await fetchContractorData();
+            } catch (error) {
+                console.error('Ошибка при обновлении данных:', error);
+                setError(error.message);
+            } finally {
+                setLoading(false);
+            }
         } else {
             console.log('Форма содержит ошибки');
         }
@@ -233,6 +307,32 @@ export default function DashboardContractor({ view }) {
         }
         console.log('block' + reason);
         setBlock(false);
+    }
+
+    // Show loading state
+    if (loading && !edit) {
+        return (
+            <div className={styles.loadingContainer}>
+                <CircularProgress />
+                <p>Загрузка данных...</p>
+            </div>
+        );
+    }
+
+    // Show error state
+    if (error && !contractorData.contractorName) {
+        return (
+            <div className={styles.errorContainer}>
+                <p>Ошибка при загрузке данных: {error}</p>
+                <Button 
+                    variant="contained" 
+                    onClick={fetchContractorData}
+                    className={styles.retryButton}
+                >
+                    Попробовать снова
+                </Button>
+            </div>
+        );
     }
 
     return (
@@ -469,6 +569,7 @@ export default function DashboardContractor({ view }) {
                                 variant="contained"
                                 onClick={handleSave}
                                 className={styles.saveButton}
+                                disabled={loading}
                                 sx={{
                                     backgroundColor: 'white',
                                     color: '#005BB9',
@@ -478,7 +579,7 @@ export default function DashboardContractor({ view }) {
                                     },
                                 }}
                             >
-                                Сохранить изменения
+                                {loading ? <CircularProgress size={24} /> : 'Сохранить изменения'}
                             </Button>
                         </div>
                     )}
@@ -502,6 +603,7 @@ export default function DashboardContractor({ view }) {
                             <OfferCardComponent 
                                 key={offer.proposalId}
                                 cardData={offer}
+                                contractorId={contractorData.publicId}
                                 contractor={true}
                                 create={false}
                             />

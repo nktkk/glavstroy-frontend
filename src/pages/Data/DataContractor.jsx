@@ -340,7 +340,8 @@ export default function DataContractor() {
 
             if (!response.ok) {
                 throw new Error(`Ошибка: ${response.status}`);
-            }
+            }       
+            const id = await response.json();
 
             setResponseSuccess('Профиль успешно создан');
             setFormData({
@@ -359,7 +360,7 @@ export default function DataContractor() {
             });
             setRevenueFile(null);
             setContractFile(null);
-            navigate('/dashboard/contractor');
+            navigate(`/dashboard/contractor/${id.contractorId}`);
         } catch (err) {
             setResponseError(err.message || 'Произошла ошибка при создании профиля');
             console.error('Ошибка при создании профиля:', err);

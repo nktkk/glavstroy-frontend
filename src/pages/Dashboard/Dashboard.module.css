@@ -13,6 +13,16 @@
   left: 20px;
   z-index: 1000;
 }
+.loadingContainer{
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.errorContainer{
+  width: 100%;
+  display: grid;
+  justify-content: center;
+}
 
 .backButton {
   background-color: #005BB9;
