@@ -8,6 +8,8 @@ import okvedDictionary from '../../data/okved.jsx';
 import { Block, Cancel, Check, Edit, LockOpen } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 
+
+
 export default function DashboardContractor({ view }) {
     const {contractorId} = useParams();
     const [edit, setEdit] = useState(false);
@@ -31,6 +33,13 @@ export default function DashboardContractor({ view }) {
         isBlocked: false,
         blockedReason: ''
     });
+    const taxFormDict = {
+        "OSN": 'OSN',
+        "USN": 'USN',
+        "ENVD": 'ENVD',
+        "ESHN": 'ESHN',
+        "PATENT": 'PATENT',
+    }
 
     const [offers, setOffers] = useState([]);
 
@@ -97,7 +106,6 @@ export default function DashboardContractor({ view }) {
             if (data.proposalList && data.proposalList.proposals) {
                 setOffers(data.proposalList.proposals);
             }
-            
             setLoading(false);
         } catch (error) {
             console.error('Error fetching contractor data:', error);
@@ -285,6 +293,19 @@ export default function DashboardContractor({ view }) {
             });
         }
     };
+    const handleTaxformChange = (selectedCode) => {
+        setContractorData({
+            ...contractorData,
+            taxForm: selectedCode
+        });
+        
+        if (errors.taxForm) {
+            setErrors({
+                ...errors,
+                taxForm: ''
+            });
+        }
+    };
 
     const toogleEdit = (e) => {
         setEdit(!edit);
@@ -295,18 +316,71 @@ export default function DashboardContractor({ view }) {
     }
 
     const handleSubmitBlock = async (e) => {
-        if (!reason){
+        if (!reason) {
             return;
         }
-        console.log('block' + reason);
-        setBlock(false);
+        
+        try {
+            setLoading(true);
+            const response = await fetch('http://localhost:8081/dashboard/contractor/blockProfile', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contractorId: contractorId,
+                    reason: reason
+                }),
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('Профиль успешно заблокирован:', data);
+            setBlock(false);
+            
+            // Refresh contractor data after blocking
+            await fetchContractorData();
+        } catch (error) {
+            console.error('Ошибка при блокировке профиля:', error);
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
     }
+    
     const handleSubmitUnblock = async (e) => {
-        if (!reason){
-            return;
+        try {
+            setLoading(true);
+            const response = await fetch('http://localhost:8081/dashboard/contractor/unblockProfile', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contractorId: contractorId
+                }),
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('Профиль успешно разблокирован:', data);
+            
+            // Refresh contractor data after unblocking
+            await fetchContractorData();
+        } catch (error) {
+            console.error('Ошибка при разблокировке профиля:', error);
+            setError(error.message);
+        } finally {
+            setLoading(false);
         }
-        console.log('block' + reason);
-        setBlock(false);
     }
 
     // Show loading state
@@ -524,15 +598,17 @@ export default function DashboardContractor({ view }) {
                             type='okved'
                             defaultValue={contractorData.okvedCode}
                         />
-                        <TextField
+                        <Selector
                             label="Форма налогообложения"
                             value={contractorData.taxForm}
-                            onChange={(e) => handleInputChange('taxForm', e.target.value)}
+                            dict={taxFormDict}
+                            single={true}
+                            onSelectionChange={handleTaxformChange}
                             disabled={view || !edit}
-                            variant="outlined"
                             className={styles.textField}
                             error={!!errors.taxForm}
                             helperText={errors.taxForm}
+                            defaultValue={contractorData.taxForm}
                         />
 
                         <TextField

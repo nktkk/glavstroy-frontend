@@ -66,6 +66,13 @@ export default function DataContractor() {
         'revenueFile': '',
         'contractFile': ''
     });
+    const taxFormDict = {
+        "OSN": 'OSN',
+        "USN": 'USN',
+        "ENVD": 'ENVD',
+        "ESHN": 'ESHN',
+        "PATENT": 'PATENT',
+    }
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -289,6 +296,19 @@ export default function DataContractor() {
 
         setErrors(newErrors);
         return isValid;
+    };
+    const handleTaxformChange = (selectedCode) => {
+        setFormData({
+            ...formData,
+            taxForm: selectedCode
+        });
+        
+        if (errors.taxForm) {
+            setErrors({
+                ...errors,
+                taxForm: ''
+            });
+        }
     };
 
     const handleSubmit = async (event) => {
@@ -583,16 +603,14 @@ export default function DataContractor() {
                                         />
                                     </div>
                                     <div className={styles.formItem}>
-                                        <TextField 
-                                            type="text"
-                                            name="taxForm"
-                                            value={formData.taxForm}
-                                            onChange={handleChange}
+                                        <Selector
                                             label="Форма налогообложения"
-                                            fullWidth
+                                            value={formData.taxForm}
+                                            dict={taxFormDict}
+                                            single={true}
+                                            onSelectionChange={handleTaxformChange}
                                             error={!!errors.taxForm}
                                             helperText={errors.taxForm}
-                                            required
                                         />
                                     </div>
                                 </div>

@@ -1,5 +1,5 @@
-import './App.css'
-import OfferList from './pages/OfferList/OfferList'
+import './App.css';
+import OfferList from './pages/OfferList/OfferList';
 import {ThemeProvider } from '@mui/material/styles';
 import formThemes from './themes.jsx'
 import DataAdmin from './pages/Data/DataAdmin.jsx';
