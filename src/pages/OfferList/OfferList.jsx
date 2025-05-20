@@ -77,12 +77,12 @@ export default function OfferList(){
         "socialFacilities": [],
         "okvedCodes": [],
         "period": {
-            "from": null,
-            "to": null
+            "from": '',
+            "to": ''
         },
         "priceRange": {
-            "min": null,
-            "max": null
+            "min": '',
+            "max": ''
         },
         "afterId": '',
         "limit": 10
@@ -98,7 +98,32 @@ export default function OfferList(){
                 requestData.afterId = '';
                 setProposals([]);
             }
+            if(requestData.priceRange.max === ''){
+                requestData.priceRange.max = '1000000000.0'
+            }
+            if(requestData.priceRange.min === ''){
+                requestData.priceRange.min = '0.0'
+            }
             
+            requestData.priceRange.max = requestData.priceRange.max.replace(',', '.');
+            
+            if (/^-?\d+$/.test(requestData.priceRange.max.trim())) {
+                requestData.priceRange.max = `${requestData.priceRange.max}.0`;
+            } 
+            else if (/^-?\d+\.$/.test(requestData.priceRange.max.trim())) {
+                requestData.priceRange.max = `${requestData.priceRange.max}0`;
+            }
+
+            requestData.priceRange.min = requestData.priceRange.min.replace(',', '.');
+            
+            if (/^-?\d+$/.test(requestData.priceRange.min.trim())) {
+                requestData.priceRange.min = `${requestData.priceRange.min}.0`;
+            } 
+            else if (/^-?\d+\.$/.test(requestData.priceRange.max.trim())) {
+                requestData.priceRange.min = `${requestData.priceRange.min}0`;
+            }
+            console.log(requestData);
+                    
             const response = await postData(API_URL, requestData);
             
             if (response && response.proposals) {
@@ -216,15 +241,16 @@ export default function OfferList(){
     }
 
     const handlePriceChange = (type) => (e) => {
-        const { value } = e.target;
-        setFilterData(prev => ({
-            ...prev,
-            priceRange: {
-                ...prev.priceRange,
-                [type]: value
-            }
-        }));
-    };
+    let { value } = e.target;
+    
+    setFilterData(prev => ({
+        ...prev,
+        priceRange: {
+            ...prev.priceRange,
+            [type]: value
+        }
+    }));
+};
 
     const handleOkvedChange = (selectedCodes) => {
         setFilterData(prev => ({
@@ -384,7 +410,7 @@ export default function OfferList(){
                                 <div className={styles.label}>Стоимость, руб</div>
                                 <div className={styles.inputSeparate}>
                                     <TextField 
-                                        type="number"
+                                        type="text"
                                         name='priceMin'
                                         value={filterData.priceRange.min}
                                         placeholder='От'
@@ -401,7 +427,7 @@ export default function OfferList(){
                                     />
                                     <div className={styles.dash}>—</div>
                                     <TextField 
-                                        type="number"
+                                        type="text"
                                         name='priceMax'
                                         value={filterData.priceRange.max}
                                         placeholder='До'
