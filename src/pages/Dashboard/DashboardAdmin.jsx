@@ -113,19 +113,13 @@ export default function DashboardAdmin() {
         if (!adminData.fullName) {
             newErrors.fullName = 'Полное имя обязательно';
             isValid = false;
-        } else if (!validateFullName(adminData.fullName)) {
-            newErrors.fullName = 'Введите ФИО полностью';
-            isValid = false;
-        }
+        } 
 
         // Валидация имени руководителя
         if (!adminData.fullSupervisorName) {
             newErrors.fullSupervisorName = 'Имя руководителя обязательно';
             isValid = false;
-        } else if (!validateFullName(adminData.fullSupervisorName)) {
-            newErrors.fullSupervisorName = 'Введите ФИО полностью';
-            isValid = false;
-        }
+        } 
 
         // Валидация телефона
         if (!adminData.phoneNumber) {
@@ -174,7 +168,7 @@ export default function DashboardAdmin() {
         if (validateForm()) {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:8081/dashboard/updateProfile', {
+                const response = await fetch('http://localhost:8081/dashboard/admin/updateProfile', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
