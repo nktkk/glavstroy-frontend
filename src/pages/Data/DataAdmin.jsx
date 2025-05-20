@@ -144,7 +144,36 @@ export default function DataAdmin() {
         }
         
         try {
-            const response = await post('http://localhost:8081/dashboard/admin/createProfile', JSON.stringify(formData));
+            const response = await fetch('http://localhost:8081/dashboard/admin/createProfile', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            })
+            if (!response.ok) {
+                throw new Error(`Ошибка: ${response.status}`);
+            }       
+            const contentType = response.headers.get('content-type');
+            let responseData;
+            if (contentType && contentType.includes('application/json')) {
+                responseData = await response.json();
+            } else {
+                const text = await response.text();
+                try {
+                    responseData = JSON.parse(text); // Попытка парсинга, если это JSON строка
+                } catch {
+                    responseData = { adminId: text }; // Создаем объект с adminId
+                }
+            }
+
+            if (responseData.adminId) {
+                localStorage.setItem('adminId', responseData.adminId);
+                console.log('ID подрядчика сохранен:', responseData.adminId);
+            } else {
+                console.warn('Ответ сервера не содержит adminId');
+            }
             setResponseSuccess('Профиль успешно создан');
             setFormData({
                 'fullName': '',

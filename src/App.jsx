@@ -25,7 +25,7 @@ function App() {
                 </ThemeProvider>
               </ProtectedRoute>
             } />
-            <Route path='/dashboard/admin' element={
+            <Route path='/dashboard/admin/:adminId' element={
               <ProtectedRoute requiredRole="ADMIN">
                 <ThemeProvider theme={formThemes.offerFormTheme}>
                   <DashboardAdmin/>

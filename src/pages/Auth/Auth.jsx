@@ -122,13 +122,15 @@ export default function Auth(){
                         email: form.email,
                         password: form.password
                     });
-                    const id = localStorage.getItem('contractorId');
+                    
                     if (result.success && result.user) {
                         switch (result.user.role) {
                             case 'ADMIN':
-                                navigate(`/dashboard/admin/${id}`, { replace: true });
+                                const idadm = localStorage.getItem('adminId');
+                                navigate(`/dashboard/admin/${idadm}`, { replace: true });
                             case 'CONTRACTOR':
-                                navigate(`/dashboard/contractor/${id}`, { replace: true });
+                                const idcontr = localStorage.getItem('contractorId');
+                                navigate(`/dashboard/contractor/${idcontr}`, { replace: true });
                             default:
                                 return '/login';
                         }

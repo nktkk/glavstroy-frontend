@@ -35,6 +35,7 @@ const postData = async (url, data) => {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
@@ -251,7 +252,8 @@ export default function OfferList(){
     }
 
     const handleGoToDashboard = (e) => {
-        navigate('/dashboard/admin');
+        const idadm = localStorage.getItem('adminId');
+        navigate(`/dashboard/admin/${idadm}`);
     }
 
     // Setup intersection observer for infinite scrolling
