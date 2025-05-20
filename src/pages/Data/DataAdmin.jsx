@@ -1,153 +1,129 @@
-import React, { useState, useEffect } from 'react';
-import { TextField, Button, IconButton, CircularProgress } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import styles from './Data.module.css';
-import { Edit } from '@mui/icons-material';
-import Selector from '../../components/Selector';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Button, TextField, MenuItem } from "@mui/material";
+import styles from './Data.module.css'
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { format } from 'date-fns';
+import Selector from "../../components/Selector";
+import { styled } from '@mui/material/styles';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { useState, useEffect } from "react";
+import { differenceInYears } from 'date-fns';
+import { useApiService } from "../../services/apiService";
+import { useNavigate } from "react-router-dom";
 
+// Стили для скрытого инпута файла
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  whiteSpace: 'nowrap',
+  width: 1,
+});
 
-export default function DashboardAdmin() {
+export default function DataAdmin() {
+    // Импортируем метод post из нашего API-сервиса
+    const { post } = useApiService();
     const navigate = useNavigate();
-    const [edit, setEdit] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const {adminId} = useParams();
-    
+    const [file, setFile] = useState(null);
+    const [formData, setFormData] = useState({
+        'fullName': '',
+        'fullSupervisorName': '',
+        'email': '',
+        'phoneNumber': '',
+        'jobTitle': '',
+        'divisionName': ''
+    });
+
     const [errors, setErrors] = useState({
-        email: '',
-        fullName: '',
-        fullSupervisorName: '',
-        phoneNumber: '',
-        jobTitle: '',
-        divisionName: ''
+        'fullName': '',
+        'fullSupervisorName': '',
+        'email': '',
+        'phoneNumber': '',
+        'jobTitle': '',
+        'divisionName': ''
     });
 
-    const [adminData, setAdminData] = useState({
-        email: "",
-        fullName: "",
-        fullSupervisorName: "",
-        phoneNumber: "",
-        jobTitle: "",
-        divisionName: ""
-    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [responseError, setResponseError] = useState('');
+    const [responseSuccess, setResponseSuccess] = useState('');
 
-    // Загрузка данных администратора при монтировании компонента
-    useEffect(() => {
-        fetchAdminData();
-    }, []);
-
-    // Функция для получения данных профиля администратора с сервера
-    const fetchAdminData = async () => {
-        try {
-            setLoading(true);
-            const response = await fetch('http://localhost:8081/dashboard/admin/getProfile', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({"adminId": adminId})
+    const handleChange = (event) => {
+        const { name, value } = event.target;
+        setFormData({
+            ...formData,
+            [name]: value
+        });
+        if (errors[name]) {
+            setErrors({
+                ...errors,
+                [name]: ''
             });
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            setAdminData({
-                email: data.email || "",
-                fullName: data.fullName || "",
-                fullSupervisorName: data.fullSupervisorName || "",
-                phoneNumber: data.phoneNumber || "",
-                jobTitle: data.jobTitle || "",
-                divisionName: data.divisionName || ""
-            });
-            
-            setLoading(false);
-        } catch (error) {
-            console.error('Error fetching admin data:', error);
-            setError(error.message);
-            setLoading(false);
         }
     };
 
-    // Валидация email
     const validateEmail = (email) => {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(String(email).toLowerCase());
+        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+        return emailRegex.test(email);
     };
 
-    // Валидация телефона
     const validatePhone = (phone) => {
-        const digits = phone.replace(/\D/g, '');
-        return digits.length === 11 && (digits.startsWith('7') || digits.startsWith('8'));
+        const digitsOnly = phone.replace(/\D/g, '');
+        
+        if (digitsOnly.length === 11 && (digitsOnly.startsWith('7') || digitsOnly.startsWith('8'))) {
+            return true;
+        } else if (digitsOnly.length === 10) {
+            return true;
+        }
+        return false;
     };
 
-    // Валидация ФИО
-    const validateFullName = (name) => {
-        return name.trim().split(' ').length >= 3;
-    };
-
-    // Общая валидация формы
     const validateForm = () => {
-        const newErrors = {
-            email: '',
-            fullName: '',
-            fullSupervisorName: '',
-            phoneNumber: '',
-            jobTitle: '',
-            divisionName: ''
-        };
-
+        const newErrors = {};
         let isValid = true;
 
-        // Валидация email
-        if (!adminData.email) {
+        if (!formData.fullName.trim()) {
+            newErrors.fullName = 'Полное имя обязательно';
+            isValid = false;
+        } else if (formData.fullName.length < 3) {
+            newErrors.fullName = 'Полное имя должно содержать не менее 3 символов';
+            isValid = false;
+        }
+
+        if (!formData.fullSupervisorName.trim()) {
+            newErrors.fullSupervisorName = 'Полное имя руководителя обязательно';
+            isValid = false;
+        } else if (formData.fullSupervisorName.length < 3) {
+            newErrors.fullSupervisorName = 'Имя руководителя должно содержать не менее 3 символов';
+            isValid = false;
+        }
+
+        if (!formData.email.trim()) {
             newErrors.email = 'Email обязателен';
             isValid = false;
-        } else if (!validateEmail(adminData.email)) {
+        } else if (!validateEmail(formData.email)) {
             newErrors.email = 'Введите корректный email';
             isValid = false;
         }
 
-        // Валидация полного имени
-        if (!adminData.fullName) {
-            newErrors.fullName = 'Полное имя обязательно';
-            isValid = false;
-        } else if (!validateFullName(adminData.fullName)) {
-            newErrors.fullName = 'Введите ФИО полностью';
-            isValid = false;
-        }
-
-        // Валидация имени руководителя
-        if (!adminData.fullSupervisorName) {
-            newErrors.fullSupervisorName = 'Имя руководителя обязательно';
-            isValid = false;
-        } else if (!validateFullName(adminData.fullSupervisorName)) {
-            newErrors.fullSupervisorName = 'Введите ФИО полностью';
-            isValid = false;
-        }
-
-        // Валидация телефона
-        if (!adminData.phoneNumber) {
+        if (!formData.phoneNumber.trim()) {
             newErrors.phoneNumber = 'Телефон обязателен';
             isValid = false;
-        } else if (!validatePhone(adminData.phoneNumber)) {
+        } else if (!validatePhone(formData.phoneNumber)) {
             newErrors.phoneNumber = 'Введите корректный номер телефона';
             isValid = false;
         }
 
-        // Валидация должности
-        if (!adminData.jobTitle) {
+        if (!formData.jobTitle.trim()) {
             newErrors.jobTitle = 'Должность обязательна';
-            isValid = false;
-        } else if (adminData.jobTitle.length < 3) {
-            newErrors.jobTitle = 'Название должности слишком короткое';
             isValid = false;
         }
 
-        // Валидация подразделения
-        if (!adminData.divisionName) {
+        if (!formData.divisionName) {
             newErrors.divisionName = 'Подразделение обязательно';
             isValid = false;
         }
@@ -156,241 +132,199 @@ export default function DashboardAdmin() {
         return isValid;
     };
 
-    const handleInputChange = (field, value) => {
-        setAdminData(prev => ({
-            ...prev,
-            [field]: value
-        }));
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setIsSubmitting(true);
+        setResponseError('');
+        setResponseSuccess('');
         
-        // Сбрасываем ошибку при изменении поля
-        if (errors[field]) {
-            setErrors(prev => ({
-                ...prev,
-                [field]: ''
-            }));
+        if (!validateForm()) {
+            setIsSubmitting(false);
+            return;
         }
-    };
-
-    const handleSave = async () => {
-        if (validateForm()) {
-            try {
-                setLoading(true);
-                const response = await fetch('http://localhost:8081/dashboard/updateProfile', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(adminData),
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
+        
+        try {
+            const response = await fetch('http://localhost:8081/dashboard/admin/createProfile', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            })
+            if (!response.ok) {
+                throw new Error(`Ошибка: ${response.status}`);
+            }       
+            const contentType = response.headers.get('content-type');
+            let responseData;
+            if (contentType && contentType.includes('application/json')) {
+                responseData = await response.json();
+            } else {
+                const text = await response.text();
+                try {
+                    responseData = JSON.parse(text); // Попытка парсинга, если это JSON строка
+                } catch {
+                    responseData = { adminId: text }; // Создаем объект с adminId
                 }
-                
-                const data = await response.json();
-                console.log('Данные администратора успешно обновлены:', data);
-                setEdit(false);
-                
-                // Обновляем данные после успешного сохранения
-                await fetchAdminData();
-            } catch (error) {
-                console.error('Ошибка при обновлении данных администратора:', error);
-                setError(error.message);
-            } finally {
-                setLoading(false);
             }
-        } else {
-            console.log('Форма содержит ошибки');
+
+            if (responseData.adminId) {
+                localStorage.setItem('adminId', responseData.adminId);
+                console.log('ID подрядчика сохранен:', responseData.adminId);
+            } else {
+                console.warn('Ответ сервера не содержит adminId');
+            }
+            setResponseSuccess('Профиль успешно создан');
+            setFormData({
+                'fullName': '',
+                'fullSupervisorName': '',
+                'email': '',
+                'phoneNumber': '',
+                'jobTitle': '',
+                'divisionName': ''
+            });
+            navigate('/proposals');
+            console.log('Успешный ответ:', response);
+        } catch (err) {
+            setResponseError(err.message || 'Произошла ошибка при создании профиля');
+            console.error('Ошибка при создании профиля:', err);
+        } finally {
+            setIsSubmitting(false);
         }
     };
-
-    const handleGoBack = () => {
-        // Используем navigate для перехода на предыдущую страницу
-        navigate(-1);
-    };
-
-    const getDivisionDisplayName = (divisionName) => {
-        const divisions = {
-            'tender_department': 'Тендерный отдел',
-            'procurement_department': 'Отдел закупок',
-            'finance_department': 'Финансовый отдел',
-            'legal_department': 'Юридический отдел',
-            'support_department': 'Департамент поддержки',
-            'management_department': 'Департамент менеджмента',
-        };
-        return divisions[divisionName] || divisionName;
-    };
-
-    const toogleEdit = (e) => {
-        setEdit(!edit);
-    };
-
-    const handleDivisionChange = (selected) => {
-        setAdminData({
-            ...adminData,
-            divisionName: selected
-        });
-        
-        if (errors.divisionName) {
-            setErrors(prev => ({
-                ...prev,
-                divisionName: ''
-            }));
-        }
-    };
-
-    // Показываем индикатор загрузки, пока данные загружаются
-    if (loading && !edit) {
-        return (
-            <div className={styles.loadingContainer}>
-                <CircularProgress />
-                <p>Загрузка данных...</p>
-            </div>
-        );
-    }
-
-    // Показываем сообщение об ошибке, если что-то пошло не так
-    if (error && !adminData.fullName) {
-        return (
-            <div className={styles.errorContainer}>
-                <p>Ошибка при загрузке данных: {error}</p>
-                <Button 
-                    variant="contained" 
-                    onClick={fetchAdminData}
-                    className={styles.retryButton}
-                >
-                    Попробовать снова
-                </Button>
-            </div>
-        );
-    }
 
     return (
         <>
             <div className={styles.mainContainer}>
-                <div className={styles.backButtonContainer}>
-                    <IconButton 
-                        onClick={handleGoBack} 
-                        className={styles.backButton}
-                        size="large"
-                    >
-                        <ArrowBackIcon sx={{ color: '#fff', fontSize: 30 }} />
-                    </IconButton>
-                    {!edit && (
-                        <IconButton 
-                            onClick={toogleEdit} 
-                            className={styles.backButton}
-                            size="large"
-                        >
-                            <Edit sx={{ color: '#fff', fontSize: 30 }} />
-                        </IconButton>
-                    )}
+                <div className={styles.header}>
+                    <h1>Заполните данные</h1>
                 </div>
-
-                <div className={`${styles.infoContainer} ${styles.adminInfo}`}>
-                    <h2 className={styles.sectionTitle}>Информация об администраторе</h2>
-                    
-                    <div className={styles.formGrid}>
-                        <TextField
-                            label="Полное имя"
-                            value={adminData.fullName}
-                            onChange={(e) => handleInputChange('fullName', e.target.value)}
-                            variant="outlined"
-                            disabled={!edit}
-                            className={styles.textField}
-                            error={!!errors.fullName}
-                            helperText={errors.fullName}
-                        />
-
-                        <TextField
-                            disabled={!edit}
-                            label="Email"
-                            type="email"
-                            value={adminData.email}
-                            onChange={(e) => handleInputChange('email', e.target.value)}
-                            variant="outlined"
-                            className={styles.textField}
-                            error={!!errors.email}
-                            helperText={errors.email}
-                        />
-
-                        <TextField
-                            disabled={!edit}
-                            label="Номер телефона"
-                            value={adminData.phoneNumber}
-                            onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                            variant="outlined"
-                            className={styles.textField}
-                            error={!!errors.phoneNumber}
-                            helperText={errors.phoneNumber}
-                        />
-
-                        <TextField
-                            disabled={!edit}
-                            label="Должность"
-                            value={adminData.jobTitle}
-                            onChange={(e) => handleInputChange('jobTitle', e.target.value)}
-                            variant="outlined"
-                            className={styles.textField}
-                            error={!!errors.jobTitle}
-                            helperText={errors.jobTitle}
-                        />
-
-                        <TextField
-                            disabled={!edit}
-                            label="Полное имя руководителя"
-                            value={adminData.fullSupervisorName}
-                            onChange={(e) => handleInputChange('fullSupervisorName', e.target.value)}
-                            variant="outlined"
-                            className={styles.textField}
-                            error={!!errors.fullSupervisorName}
-                            helperText={errors.fullSupervisorName}
-                        />
-
-                        <Selector
-                            disabled={!edit}
-                            dict={{
-                                'tender_department': 'Тендерный департамент',
-                                'support_department': 'Департамент поддержки',
-                                'management_department': 'Департамент менеджмента',
-                            }}
-                            single={true}
-                            defaultValue={adminData.divisionName}
-                            label="Подразделение"
-                            value={adminData.divisionName}
-                            onSelectionChange={handleDivisionChange}
-                            variant="outlined"
-                            className={styles.textField}
-                            error={errors.divisionName}
-                        />
-                        {errors.divisionName && (
-                            <div style={{ color: '#f44336', fontSize: '0.75rem', marginTop: '-10px', marginLeft: '14px' }}>
-                                {errors.divisionName}
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <form onSubmit={handleSubmit} className={styles.wrapper}>
+                        <div className={styles.blank}></div>
+                        <div className={styles.form}>
+                            {responseError && (
+                                <div className={styles.formItem} style={{ color: 'red', marginBottom: '1em' }}>
+                                    {responseError}
+                                </div>
+                            )}
+                            {responseSuccess && (
+                                <div className={styles.formItem} style={{ color: 'green', marginBottom: '1em' }}>
+                                    {responseSuccess}
+                                </div>
+                            )}
+                            <div className={styles.infoForm}>
+                                <div className={styles.formItem} style={{fontWeight: 600}}>Основная информация</div>
+                                <div className={styles.formItem}>
+                                    <TextField 
+                                        type="text"
+                                        name="fullName"
+                                        value={formData.fullName}
+                                        onChange={handleChange}
+                                        label="Полное имя" 
+                                        fullWidth
+                                        error={!!errors.fullName}
+                                        helperText={errors.fullName}
+                                        required
+                                    />
+                                </div>
+                                <div className={styles.formItem}>
+                                    <TextField 
+                                        type="text"
+                                        name="fullSupervisorName"
+                                        value={formData.fullSupervisorName}
+                                        onChange={handleChange}
+                                        label="Полное имя руководителя" 
+                                        fullWidth
+                                        error={!!errors.fullSupervisorName}
+                                        helperText={errors.fullSupervisorName}
+                                        required
+                                    />
+                                </div>
+                                <div className={styles.formItem}>
+                                    <TextField 
+                                        type="text"
+                                        name="jobTitle"
+                                        value={formData.jobTitle}
+                                        onChange={handleChange}
+                                        label="Должность" 
+                                        fullWidth
+                                        error={!!errors.jobTitle}
+                                        helperText={errors.jobTitle}
+                                        required
+                                    />
+                                </div>
+                                <div className={styles.formItem}>
+                                    <TextField 
+                                        select
+                                        name="divisionName"
+                                        value={formData.divisionName}
+                                        onChange={handleChange}
+                                        label="Подразделение" 
+                                        fullWidth
+                                        error={!!errors.divisionName}
+                                        helperText={errors.divisionName}
+                                        required
+                                    >
+                                        <MenuItem value="tender_department">Тендерный отдел</MenuItem>
+                                        <MenuItem value="support_department">Отдел поддержки</MenuItem>
+                                        <MenuItem value="management_department">Отдел управления</MenuItem>
+                                    </TextField>
+                                </div>
                             </div>
-                        )}
-                    </div>
-                    {edit && (
-                        <div className={styles.buttonContainer}>
-                            <Button 
-                                variant="contained"
-                                onClick={handleSave}
-                                className={styles.saveButton}
-                                disabled={loading}
-                                sx={{
-                                    backgroundColor: 'white',
-                                    color: '#005BB9',
-                                    '&:hover': {
-                                        backgroundColor: '#f0f0f0',
-                                        color: '#005BB9',
-                                    },
-                                }}
-                            >
-                                {loading ? <CircularProgress size={24} /> : 'Сохранить изменения'}
-                            </Button>
+                            <div className={styles.contactForm}>
+                                <div className={styles.formItem} style={{fontWeight: 600}}>Контактная информация</div>
+                                <div>
+                                    <div className={styles.formItem}>
+                                        <TextField 
+                                            type="email"
+                                            name="email"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            label="Email" 
+                                            fullWidth
+                                            error={!!errors.email}
+                                            helperText={errors.email}
+                                            required
+                                        />
+                                    </div>
+                                    <div className={styles.formItem}>
+                                        <TextField 
+                                            type="tel"
+                                            name="phoneNumber"
+                                            value={formData.phoneNumber}
+                                            onChange={handleChange}
+                                            label="Телефон" 
+                                            fullWidth
+                                            error={!!errors.phoneNumber}
+                                            helperText={errors.phoneNumber}
+                                            required
+                                            placeholder="+7 (XXX) XXX-XX-XX"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className={styles.submitButtonContainer} style={{ marginTop: '2em', marginBottom: '2em', display: 'flex', justifyContent: 'left' }}>
+                                <Button 
+                                    type="submit" 
+                                    variant="contained" 
+                                    color="primary"
+                                    disabled={isSubmitting}
+                                    sx={{ 
+                                        minWidth: '200px',
+                                        bgcolor: 'black',
+                                        color: 'white',
+                                        '&:hover': {
+                                            color: '#ffffffde',
+                                        },
+                                    }}
+                                >
+                                    {isSubmitting ? 'Сохранение...' : 'Сохранить'}
+                                </Button>
+                            </div>
                         </div>
-                    )}
-                </div>
+                    </form>
+                </LocalizationProvider>
             </div>
         </>
     );

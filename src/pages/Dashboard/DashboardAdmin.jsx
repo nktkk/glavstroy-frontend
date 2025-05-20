@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
-import { TextField, Button, IconButton } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { TextField, Button, IconButton, CircularProgress } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import styles from './Dashboard.module.css';
 import { Edit } from '@mui/icons-material';
 import Selector from '../../components/Selector';
+import { useNavigate, useParams } from 'react-router-dom';
 
 export default function DashboardAdmin() {
+    const {adminId} = useParams();
+    const navigate = useNavigate();
     const [edit, setEdit] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    
     const [errors, setErrors] = useState({
         email: '',
         fullName: '',
@@ -17,13 +23,52 @@ export default function DashboardAdmin() {
     });
 
     const [adminData, setAdminData] = useState({
-        email: "admin@tender.gov.ru",
-        fullName: "Петров Петр Петрович",
-        fullSupervisorName: "Сидоров Сидор Сидорович",
-        phoneNumber: "+7 (495) 987-65-43",
-        jobTitle: "Главный специалист по тендерам",
-        divisionName: "tender_department"
+        email: "",
+        fullName: "",
+        fullSupervisorName: "",
+        phoneNumber: "",
+        jobTitle: "",
+        divisionName: ""
     });
+
+    // Загрузка данных администратора при монтировании компонента
+    useEffect(() => {
+        fetchAdminData();
+    }, []);
+
+    // Функция для получения данных профиля администратора с сервера
+    const fetchAdminData = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch('http://localhost:8081/dashboard/admin/getProfile', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({"adminId": adminId}),
+                });
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            setAdminData({
+                email: data.email || "",
+                fullName: data.fullName || "",
+                fullSupervisorName: data.fullSupervisorName || "",
+                phoneNumber: data.phoneNumber || "",
+                jobTitle: data.jobTitle || "",
+                divisionName: data.divisionName || ""
+            });
+            
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching admin data:', error);
+            setError(error.message);
+            setLoading(false);
+        }
+    };
 
     // Валидация email
     const validateEmail = (email) => {
@@ -125,16 +170,42 @@ export default function DashboardAdmin() {
         }
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (validateForm()) {
-            console.log('Сохранение данных администратора:', adminData);
-            // Здесь будет логика сохранения
-            setEdit(false);
+            try {
+                setLoading(true);
+                const response = await fetch('http://localhost:8081/dashboard/updateProfile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(adminData),
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Данные администратора успешно обновлены:', data);
+                setEdit(false);
+                
+                // Обновляем данные после успешного сохранения
+                await fetchAdminData();
+            } catch (error) {
+                console.error('Ошибка при обновлении данных администратора:', error);
+                setError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        } else {
+            console.log('Форма содержит ошибки');
         }
     };
 
     const handleGoBack = () => {
-        console.log('Возврат на предыдущую страницу');
+        // Используем navigate для перехода на предыдущую страницу
+        navigate(-1);
     };
 
     const getDivisionDisplayName = (divisionName) => {
@@ -142,7 +213,9 @@ export default function DashboardAdmin() {
             'tender_department': 'Тендерный отдел',
             'procurement_department': 'Отдел закупок',
             'finance_department': 'Финансовый отдел',
-            'legal_department': 'Юридический отдел'
+            'legal_department': 'Юридический отдел',
+            'support_department': 'Департамент поддержки',
+            'management_department': 'Департамент менеджмента',
         };
         return divisions[divisionName] || divisionName;
     };
@@ -164,6 +237,32 @@ export default function DashboardAdmin() {
             }));
         }
     };
+
+    // Показываем индикатор загрузки, пока данные загружаются
+    if (loading && !edit) {
+        return (
+            <div className={styles.loadingContainer}>
+                <CircularProgress />
+                <p>Загрузка данных...</p>
+            </div>
+        );
+    }
+
+    // Показываем сообщение об ошибке, если что-то пошло не так
+    if (error && !adminData.fullName) {
+        return (
+            <div className={styles.errorContainer}>
+                <p>Ошибка при загрузке данных: {error}</p>
+                <Button 
+                    variant="contained" 
+                    onClick={fetchAdminData}
+                    className={styles.retryButton}
+                >
+                    Попробовать снова
+                </Button>
+            </div>
+        );
+    }
 
     return (
         <>
@@ -275,6 +374,7 @@ export default function DashboardAdmin() {
                                 variant="contained"
                                 onClick={handleSave}
                                 className={styles.saveButton}
+                                disabled={loading}
                                 sx={{
                                     backgroundColor: 'white',
                                     color: '#005BB9',
@@ -284,7 +384,7 @@ export default function DashboardAdmin() {
                                     },
                                 }}
                             >
-                                Сохранить изменения
+                                {loading ? <CircularProgress size={24} /> : 'Сохранить изменения'}
                             </Button>
                         </div>
                     )}
