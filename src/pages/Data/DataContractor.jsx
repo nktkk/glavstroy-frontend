@@ -12,6 +12,7 @@ import { differenceInYears } from 'date-fns';
 import okvedDictionary from "../../data/okved";
 import { useNavigate } from "react-router-dom";
 import { useApiService } from "../../services/apiService";
+import { useUser } from '../../contexts/UserContext';
 
 
 // Стили для скрытого инпута файла
@@ -48,7 +49,7 @@ export default function DataContractor() {
         'taxForm': '',
         'okvedCode': ''
     });
-
+    const { getAuthHeaders } = useUser();
     const [errors, setErrors] = useState({
         'identificationNumber': '',
         'contractorName': '',
@@ -324,7 +325,9 @@ export default function DataContractor() {
             const response = await fetch('http://localhost:8081/dashboard/contractor/createProfile', {
                 method: 'POST',
                 body: formDataToSend,
-                // Заголовки не нужны, браузер сам установит `multipart/form-data` с границей
+                headers: {
+                    getAuthHeaders,
+                },
             });
 
             if (!response.ok) {

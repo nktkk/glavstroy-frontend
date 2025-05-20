@@ -145,7 +145,6 @@ export const UserProvider = ({ children }) => {
         if (token) {
             return {
                 'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
             };
         }
         return {
