@@ -160,10 +160,8 @@ function formatDateTime(dateTimeString) {
 function CreateForm({ onSubmit, onClose, contractorId }) {
     const [offer, setOffer] = useState({
         'proposalName': '', 
-        'contractorName': '',
         'fullProposalPrice': '',
         'contractorId': contractorId || '',
-        'contractorInn': '',
         'okvedCode': '',
         'facility': '',
         'socialFacility': '',
@@ -196,9 +194,6 @@ function CreateForm({ onSubmit, onClose, contractorId }) {
                 break;
             case 'facility':
                 if (!value) error = 'Выберите объект';
-                break;
-            case 'socialFacility':
-                if (!value) error = 'Выберите социальный объект';
                 break;
             case 'fullProposalPrice':
                 if (!value) error = 'Укажите стоимость';
@@ -278,10 +273,8 @@ function CreateForm({ onSubmit, onClose, contractorId }) {
         // 1. Создаем JSON-данные из полей формы
         const jsonData = {
             'proposalName': offer.proposalName, 
-            'contractorName': offer.contractorName,
             'fullProposalPrice': offer.fullProposalPrice,
             'contractorId': contractorId || '',
-            'contractorInn': offer.contractorInn,
             'okvedCode': offer.okvedCode,
             'facility': offer.facility,
             'socialFacility': offer.socialFacility,
