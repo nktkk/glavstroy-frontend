@@ -38,9 +38,8 @@ export const UserProvider = ({ children }) => {
         if (!decoded) return null;
         
         return {
-            email: decoded.email || decoded.sub,
+            email: decoded.sub,
             role: decoded.role,
-            username: decoded.username,
         };
     };
 

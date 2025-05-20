@@ -19,28 +19,28 @@ function App() {
             <Route path='/login' element={<ThemeProvider theme={formThemes.registerFormTheme}><Auth/></ThemeProvider>} />
             {/* <Route path='/login' element={<ThemeProvider theme={formThemes.offerFormTheme}><DashboardContractor/></ThemeProvider>} /> */}
             <Route path='/data/admin' element={
-              <ProtectedRoute requiredRole="Admin">
+              <ProtectedRoute requiredRole="ADMIN">
                 <ThemeProvider theme={formThemes.registerFormTheme}>
                   <DataAdmin/>
                 </ThemeProvider>
               </ProtectedRoute>
             } />
             <Route path='/dashboard/admin' element={
-              <ProtectedRoute requiredRole="Admin">
+              <ProtectedRoute requiredRole="ADMIN">
                 <ThemeProvider theme={formThemes.offerFormTheme}>
                   <DashboardAdmin/>
                 </ThemeProvider>
               </ProtectedRoute>
             } />
             <Route path='/proposals' element={
-              <ProtectedRoute requiredRole="Admin">
+              <ProtectedRoute requiredRole="ADMIN">
                 <ThemeProvider theme={formThemes.offerFormTheme}>
                   <OfferList/>
                 </ThemeProvider>
               </ProtectedRoute>
             } />
             <Route path='/contractor/:contractorId' element={
-              <ProtectedRoute requiredRole="Admin">
+              <ProtectedRoute requiredRole="ADMIN">
                 <ThemeProvider theme={formThemes.offerFormTheme}>
                   <DashboardContractor view={true}/>
                 </ThemeProvider>
@@ -48,14 +48,14 @@ function App() {
             } />
 
             <Route path='/data/contractor' element={
-              <ProtectedRoute requiredRole="Contractor">
+              <ProtectedRoute requiredRole="CONTRACTOR">
                 <ThemeProvider theme={formThemes.registerFormTheme}>
                   <DataContractor/>
                 </ThemeProvider>
               </ProtectedRoute>
             } />
             <Route path='/dashboard/contractor/' element={
-              <ProtectedRoute requiredRole="Contractor">
+              <ProtectedRoute requiredRole="CONTRACTOR">
                 <ThemeProvider theme={formThemes.offerFormTheme}>
                   <DashboardContractor view={false}/>
                 </ThemeProvider>
