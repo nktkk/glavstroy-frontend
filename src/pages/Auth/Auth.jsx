@@ -88,7 +88,6 @@ export default function Auth(){
     const handleSubmit = async (event) => {
         event.preventDefault();
         setSubmitError('');
-        
         const isFormValid = validateForm();
         
         if (isFormValid) {
@@ -125,7 +124,7 @@ export default function Auth(){
                     });
                     
                     if (result.success && result.user) {
-                        const redirectPath = from !== '/login' ? from : getRoleBasedPath(result.user.role);
+                        const redirectPath = getRoleBasedPath(result.user.role);
                         navigate(redirectPath, { replace: true });
                     } else {
                         setSubmitError(result.error || 'Произошла ошибка при входе');

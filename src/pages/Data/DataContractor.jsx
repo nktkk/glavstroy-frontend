@@ -322,13 +322,9 @@ export default function DataContractor() {
             if (revenueFile) formDataToSend.append('revenueFile', revenueFile);
             if (contractFile) formDataToSend.append('contractFile', contractFile);
 
-            const response = await fetch('http://localhost:8081/dashboard/contractor/createProfile', {
-                method: 'POST',
-                body: formDataToSend,
-                headers: {
-                    getAuthHeaders,
-                },
-            });
+            const response = await post('http://localhost:8081/dashboard/contractor/createProfile', 
+                formDataToSend
+            );
 
             if (!response.ok) {
                 throw new Error(`Ошибка: ${response.status}`);
