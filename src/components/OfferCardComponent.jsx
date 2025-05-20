@@ -6,6 +6,21 @@ import { Add } from '@mui/icons-material';
 import { createTheme } from '@mui/material/styles';
 import Selector from './Selector';
 import { useNavigate } from 'react-router-dom';
+import { useApiService } from "../services/apiService";
+import { styled } from '@mui/material/styles';
+
+
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  whiteSpace: 'nowrap',
+  width: 1,
+});
 
 const popupTheme = createTheme({
   components: {
@@ -153,6 +168,10 @@ function CreateForm({ onSubmit, onClose, contractorId }) {
         'socialFacility': '',
         'description': '',
     });
+    const { post } = useApiService();
+    
+    const [priceListFile, setPriceListFile] = useState(null);
+    const [priceListError, setPriceListError] = useState('');
     
     const [errors, setErrors] = useState({
         proposalName: '',
@@ -207,6 +226,16 @@ function CreateForm({ onSubmit, onClose, contractorId }) {
         }));
     };
 
+    const handlePriceListChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setPriceListFile(file);
+            setPriceListError('');
+        } else {
+            setPriceListError('Необходимо выбрать файл прайс-листа');
+        }
+    };
+
     const handleSelectionChange = (field, value) => {
         const error = validateField(field, value);
         
@@ -232,36 +261,38 @@ function CreateForm({ onSubmit, onClose, contractorId }) {
         
         setErrors(newErrors);
         
-        return !Object.values(newErrors).some(error => error !== '');
+        // Добавляем валидацию файла прайс-листа
+        const isPriceListValid = priceListFile !== null;
+        if (!isPriceListValid) {
+            setPriceListError('Необходимо выбрать файл прайс-листа');
+        }
+        
+        return !Object.values(newErrors).some(error => error !== '') && isPriceListValid;
     };
 
     const handleSubmitOffer = async (e) => {
         e.preventDefault();
         
         if (validateForm()) {
-            const newOffer = {
-                ...offer,
-                contractorId: contractorId
-            };
+            const formData = new FormData();
             
-            console.log('Форма валидна, данные:', newOffer);
+            // Добавляем все поля формы
+            Object.keys(offer).forEach(key => {
+                formData.append(key, offer[key]);
+            });
+            
+            // Добавляем файл прайс-листа
+            formData.append('priceListFile', priceListFile);
             
             try {
-                const response = await fetch('http://localhost:8081/dashboard/contractor/createProposal', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(newOffer),
-                });
+                const response = await post('http://localhost:8081/dashboard/contractor/createProposal', formData,);
                     
                 if (response.ok) {
                     console.log('Предложение успешно создано');
+                    onClose();
                 } else {
                     console.error('Ошибка при создании предложения');
                 }
-                
-                onClose();
             } catch (error) {
                 console.error('Ошибка при отправке предложения:', error);
             }
@@ -364,6 +395,35 @@ function CreateForm({ onSubmit, onClose, contractorId }) {
                             >
                                 Создать
                             </Button>
+                        </div>
+                        <div className={styles.detailItem}>
+                            <Button
+                                            component="label"
+                                            role={undefined}
+                                            variant="contained"
+                                            tabIndex={-1}
+                                            endIcon={priceListFile ? null : <CloudUploadIcon />}
+                                            sx={{
+                                                display: 'flex',
+                                                justifyContent: 'left',
+                                                borderColor: errors.revenueFile ? '#d32f2f' : undefined,
+                                                color: errors.revenueFile ? '#d32f2f' : undefined,
+                                                marginTop: '10px'
+                                            }}
+                                        >
+                                            {revenueFile ? (
+                                                <div className={styles.offerText}>
+                                                    Файл выручки: <div style={{fontWeight: 500}}>{revenueFile.name}</div>
+                                                </div>
+                                            ) : (
+                                                <>Файл выручки (файл excel)</>
+                                            )}
+                                            <VisuallyHiddenInput
+                                                type="file"
+                                                onChange={handlePriceListChange}
+                                                accept=".xlsx, .xls"
+                                            />
+                                        </Button>
                         </div>
                     </form>
                 </div>

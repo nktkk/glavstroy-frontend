@@ -49,7 +49,6 @@ export default function DataContractor() {
         'taxForm': '',
         'okvedCode': ''
     });
-    const { getAuthHeaders } = useUser();
     const [errors, setErrors] = useState({
         'identificationNumber': '',
         'contractorName': '',
@@ -302,26 +301,35 @@ export default function DataContractor() {
             setIsSubmitting(false);
             return;
         }
+        const jsonData = {
+            'identificationNumber': formData.identificationNumber,
+            'contractorName': formData.contractorName,
+            'contractorFullName': formData.contractorFullName,
+            'contractorDescription': formData.contractorDescription,
+            'email': formData.email,
+            'phoneNumber': formData.phoneNumber,
+            'kpp': formData.kpp,
+            'inn': formData.inn,
+            'foundedAt': formData.foundedAt,
+            'address': formData.address,
+            'taxForm': formData.taxForm,
+            'okvedCode': formData.okvedCode
+        };
+
+        // 2. Создание FormData для файлов
+        const formDataToSend = new FormData();
+        
+        // 3. Добавляем JSON как строку в FormData
+        formDataToSend.append('request', new Blob(
+            [JSON.stringify(jsonData)],
+            { type: 'application/json' }
+        ));
+        
+        // 4. Добавляем файлы
+        if (revenueFile) formDataToSend.append('revenueFile', revenueFile);
+        if (contractFile) formDataToSend.append('contractFile', contractFile);
 
         try {
-            // Создаем FormData для отправки файлов
-            const formDataToSend = new FormData();
-
-            // Добавляем все текстовые поля в JSON (если сервер ожидает JSON)
-            const jsonData = { ...formData };
-            
-            // Форматируем дату, если она есть
-            if (jsonData.foundedAt) {
-                jsonData.foundedAt = format(jsonData.foundedAt, 'yyyy-MM-dd');
-            }
-
-            // Добавляем JSON-данные как отдельное поле (если сервер принимает такую структуру)
-            formDataToSend.append('request', JSON.stringify(jsonData));
-
-            // Добавляем файлы в FormData
-            if (revenueFile) formDataToSend.append('revenueFile', revenueFile);
-            if (contractFile) formDataToSend.append('contractFile', contractFile);
-
             const response = await post('http://localhost:8081/dashboard/contractor/createProfile', 
                 formDataToSend
             );
