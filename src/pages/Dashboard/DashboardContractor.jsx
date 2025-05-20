@@ -595,6 +595,7 @@ export default function DashboardContractor({ view }) {
                                 cardData={''}
                                 contractor={true}
                                 create={true}
+                                contractorId={contractorData.publicId}
                             />
                         </div>
                     )}
