@@ -341,8 +341,26 @@ export default function DataContractor() {
             if (!response.ok) {
                 throw new Error(`Ошибка: ${response.status}`);
             }       
-            const id = await response.json();
+            const contentType = response.headers.get('content-type');
+            let responseData;
+            if (contentType && contentType.includes('application/json')) {
+                responseData = await response.json();
+            } else {
+                const text = await response.text();
+                try {
+                    responseData = JSON.parse(text); // Попытка парсинга, если это JSON строка
+                } catch {
+                    responseData = { contractorId: text }; // Создаем объект с contractorId
+                }
+            }
 
+            if (responseData.contractorId) {
+                localStorage.setItem('contractorId', responseData.contractorId);
+                console.log('ID подрядчика сохранен:', responseData.contractorId);
+            } else {
+                console.warn('Ответ сервера не содержит contractorId');
+            }
+            
             setResponseSuccess('Профиль успешно создан');
             setFormData({
                 identificationNumber: '',

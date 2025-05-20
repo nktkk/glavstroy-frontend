@@ -122,10 +122,17 @@ export default function Auth(){
                         email: form.email,
                         password: form.password
                     });
-                    
+                    const id = localStorage.getItem('contractorId');
                     if (result.success && result.user) {
-                        const redirectPath = getRoleBasedPath(result.user.role);
-                        navigate(redirectPath, { replace: true });
+                        switch (result.user.role) {
+                            case 'ADMIN':
+                                navigate(`/dashboard/admin/${id}`, { replace: true });
+                            case 'CONTRACTOR':
+                                navigate(`/dashboard/contractor/${id}`, { replace: true });
+                            default:
+                                return '/login';
+                        }
+                        
                     } else {
                         setSubmitError(result.error || 'Произошла ошибка при входе');
                     }
