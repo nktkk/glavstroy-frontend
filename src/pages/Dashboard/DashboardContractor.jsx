@@ -57,7 +57,7 @@ export default function DashboardContractor({ view }) {
     const fetchContractorData = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:8081/contractor/getProfile', {
+            const response = await fetch('http://localhost:8081/dashboard/contractor/getProfile', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -238,7 +238,7 @@ export default function DashboardContractor({ view }) {
         if (validateForm()) {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:8081/contractor/updateProfile', {
+                const response = await fetch('http://localhost:8081/dashboard/contractor/updateProfile', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,

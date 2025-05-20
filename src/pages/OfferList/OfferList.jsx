@@ -159,7 +159,7 @@ export default function OfferList(){
             period: { from, to }
         }));
         
-        setAnchorEl(null);
+        setAnchorEl(null);4
     };
 
     const handleClose = () => {

@@ -144,7 +144,7 @@ export default function DataAdmin() {
         }
         
         try {
-            const response = await post('http://localhost:8081/dashboard/admin/createProfile', formData);
+            const response = await post('http://localhost:8081/dashboard/admin/createProfile', JSON.stringify(formData));
             setResponseSuccess('Профиль успешно создан');
             setFormData({
                 'fullName': '',
