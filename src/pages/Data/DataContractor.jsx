@@ -378,7 +378,9 @@ export default function DataContractor() {
             });
             setRevenueFile(null);
             setContractFile(null);
-            navigate(`/dashboard/contractor/${id.contractorId}`);
+            if (responseData.contractorId) {
+                navigate(`/dashboard/contractor/${responseData.contractorId}`);
+            }
         } catch (err) {
             setResponseError(err.message || 'Произошла ошибка при создании профиля');
             console.error('Ошибка при создании профиля:', err);
