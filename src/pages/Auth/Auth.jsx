@@ -226,8 +226,8 @@ export default function Auth(){
                                         required
                                         disabled={loading}
                                     >
-                                        <MenuItem value={'Contractor'}>Подрядчик</MenuItem>
-                                        <MenuItem value={'Admin'}>Сотрудник ГС-СПб</MenuItem>
+                                        <MenuItem value={'CONTRACTOR'}>Подрядчик</MenuItem>
+                                        <MenuItem value={'ADMIN'}>Сотрудник ГС-СПб</MenuItem>
                                     </TextField>
                                 </div>
                             </>
