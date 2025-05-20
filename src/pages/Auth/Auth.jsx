@@ -15,7 +15,6 @@ export default function Auth(){
     const navigate = useNavigate();
     const location = useLocation();
     
-    // Получаем путь, на который нужно перенаправить после входа
     const from = location.state?.from?.pathname || '/dashboard';
 
     const handleChange = (event) => {
@@ -30,7 +29,6 @@ export default function Auth(){
                 [name]: ''
             });
         }
-        // Очищаем ошибку при изменении полей
         if (submitError) {
             setSubmitError('');
         }
@@ -41,8 +39,7 @@ export default function Auth(){
         return emailRegex.test(email);
     };
 
-    const validatePassword = (password) => {
-        // Минимум 8 символов, хотя бы одна цифра, одна строчная и одна заглавная буква
+    const validatePassword = (password) => { 
         const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
         return passwordRegex.test(password);
     };
@@ -56,7 +53,6 @@ export default function Auth(){
             newErrors.email = 'Неверный формат email';
         }
         
-        // Проверка пароля
         if (!form.password) {
             newErrors.password = 'Пароль обязателен';
         } else if (regToggle && !validatePassword(form.password)) {
@@ -78,15 +74,14 @@ export default function Auth(){
         return Object.keys(newErrors).length === 0;
     };
 
-    // Функция для определения пути в зависимости от роли
     const getRoleBasedPath = (role) => {
         switch (role) {
             case 'Admin':
-                return '/admin/dashboard';
+                return '/data/admin';
             case 'Contractor':
-                return '/contractor/dashboard';
+                return '/data/contractor';
             default:
-                return '/dashboard';
+                return '/login';
         }
     };
 
@@ -101,7 +96,6 @@ export default function Auth(){
             
             try {
                 let result;
-                
                 if (regToggle) {
                     result = await register({
                         email: form.email,
@@ -125,7 +119,6 @@ export default function Auth(){
                         setSubmitError(result.error || 'Произошла ошибка при регистрации');
                     }
                 } else {
-                    // Обычный вход
                     result = await login({
                         email: form.email,
                         password: form.password

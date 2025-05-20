@@ -24,7 +24,7 @@ export default function DashboardContractor({ view }) {
         address: "г. Москва, ул. Строительная, д. 15",
         taxForm: "ОСН",
         okvedCode: "43.21",
-        isBlocked: true,
+        isBlocked: false,
         blockedReason: 'Сосал бибу ыва  аыв аыв аыв ав ыа выаыв аыв аа в ав ыа выа  авы аыв аыв аыв ав а'
     });
 
@@ -229,13 +229,6 @@ export default function DashboardContractor({ view }) {
         <>
             <div className={styles.mainContainer}>
                 <div className={styles.backButtonContainer}>
-                    <IconButton 
-                        onClick={handleGoBack} 
-                        className={styles.backButton}
-                        size="large"
-                    >
-                        <ArrowBackIcon sx={{ color: '#fff', fontSize: 30 }} />
-                    </IconButton>
                     {edit ? (
                         <>
                         </>

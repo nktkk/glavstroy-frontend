@@ -16,16 +16,16 @@ function App() {
     <UserProvider>
       <BrowserRouter>
         <Routes>
-            <Route path='/login' element={<ThemeProvider theme={formThemes.registerFormTheme}><Auth/></ThemeProvider>} />
-            {/* <Route path='/login' element={<ThemeProvider theme={formThemes.offerFormTheme}><DashboardContractor view={false}/></ThemeProvider>} /> */}
-            <Route path='/data-supervisor' element={
+            {/* <Route path='/login' element={<ThemeProvider theme={formThemes.registerFormTheme}><Auth/></ThemeProvider>} /> */}
+            <Route path='/login' element={<ThemeProvider theme={formThemes.offerFormTheme}><OfferList/></ThemeProvider>} />
+            <Route path='/data/admin' element={
               <ProtectedRoute requiredRole="Admin">
                 <ThemeProvider theme={formThemes.registerFormTheme}>
                   <DataAdmin/>
                 </ThemeProvider>
               </ProtectedRoute>
             } />
-            <Route path='/dashboard-supervisor' element={
+            <Route path='/dashboard/admin' element={
               <ProtectedRoute requiredRole="Admin">
                 <ThemeProvider theme={formThemes.offerFormTheme}>
                   <DashboardAdmin/>
@@ -47,14 +47,14 @@ function App() {
               </ProtectedRoute>
             } />
 
-            <Route path='/data-contractor' element={
+            <Route path='/data/contractor' element={
               <ProtectedRoute requiredRole="Contractor">
                 <ThemeProvider theme={formThemes.registerFormTheme}>
                   <DataContractor/>
                 </ThemeProvider>
               </ProtectedRoute>
             } />
-            <Route path='/dashboard-contractor' element={
+            <Route path='/dashboard/contractor' element={
               <ProtectedRoute requiredRole="Contractor">
                 <ThemeProvider theme={formThemes.offerFormTheme}>
                   <DashboardContractor view={false}/>

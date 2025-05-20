@@ -10,6 +10,9 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useState, useEffect } from "react";
 import { differenceInYears } from 'date-fns';
 import okvedDictionary from "../../data/okved";
+import { useNavigate } from "react-router-dom";
+import { useApiService } from "../../services/apiService";
+
 
 // Стили для скрытого инпута файла
 const VisuallyHiddenInput = styled('input')({
@@ -26,6 +29,10 @@ const VisuallyHiddenInput = styled('input')({
 
 export default function DataContractor() {
     const [file, setFile] = useState(null);
+    const { post } = useApiService();
+    const navigate = useNavigate();
+    const [responseError, setResponseError] = useState('');
+    const [responseSuccess, setResponseSuccess] = useState('');
     const [formData, setFormData] = useState({
         'identificationNumber': '',
         'contractorName': '',
@@ -260,13 +267,21 @@ export default function DataContractor() {
         return isValid;
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
+        event.preventDefault();
         event.preventDefault();
         setIsSubmitting(true);
-        
-        if (validateForm()) {
-            console.log('Форма валидна, данные:', formData);
-            alert('Форма успешно отправлена!');
+        setResponseError('');
+        setResponseSuccess('');
+        setIsSubmitting(true);
+
+        if (!validateForm()) {
+            setIsSubmitting(false);
+            return;
+        }
+        try {
+            const response = await post('http://localhost:8081/dashboard/contractor/createProfile', formData);
+            setResponseSuccess('Профиль успешно создан');
             setFormData({
                 'identificationNumber': '',
                 'contractorName': '',
@@ -274,7 +289,7 @@ export default function DataContractor() {
                 'contractorDescription': '',
                 'email': '',
                 'phoneNumber': '',
-                'kpp': '',
+                'kpp': '', 
                 'inn': '',
                 'foundedAt': '',
                 'address': '',
@@ -282,11 +297,14 @@ export default function DataContractor() {
                 'okvedCode': ''
             });
             setFile(null);
-        } else {
-            console.log('Форма содержит ошибки');
+            navigate('/dashboard/contractor');
+            console.log('Успешный ответ:', response);
+        } catch (err) {
+            setResponseError(err.message || 'Произошла ошибка при создании профиля');
+            console.error('Ошибка при создании профиля:', err);
+        } finally {
+            setIsSubmitting(false);
         }
-        
-        setIsSubmitting(false);
     };
 
     return (
@@ -299,6 +317,16 @@ export default function DataContractor() {
                     <form onSubmit={handleSubmit} className={styles.wrapper}>
                         <div className={styles.blank}></div>
                         <div className={styles.form}>
+                            {responseError && (
+                                <div className={styles.formItem} style={{ color: 'red', marginBottom: '1em' }}>
+                                    {responseError}
+                                </div>
+                            )}
+                            {responseSuccess && (
+                                <div className={styles.formItem} style={{ color: 'green', marginBottom: '1em' }}>
+                                    {responseSuccess}
+                                </div>
+                            )}
                             <div className={styles.infoForm}>
                                 <div className={styles.formItem} style={{fontWeight: 600}}>Информация о компании</div>
                                 <div className={styles.formItem}>

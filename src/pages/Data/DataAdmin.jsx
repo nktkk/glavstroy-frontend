@@ -9,6 +9,8 @@ import { styled } from '@mui/material/styles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useState, useEffect } from "react";
 import { differenceInYears } from 'date-fns';
+import { useApiService } from "../../services/apiService";
+import { useNavigate } from "react-router-dom";
 
 // Стили для скрытого инпута файла
 const VisuallyHiddenInput = styled('input')({
@@ -24,6 +26,9 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 export default function DataAdmin() {
+    // Импортируем метод post из нашего API-сервиса
+    const { post } = useApiService();
+    const navigate = useNavigate();
     const [file, setFile] = useState(null);
     const [formData, setFormData] = useState({
         'fullName': '',
@@ -44,6 +49,8 @@ export default function DataAdmin() {
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [responseError, setResponseError] = useState('');
+    const [responseSuccess, setResponseSuccess] = useState('');
 
     const handleChange = (event) => {
         const { name, value } = event.target;
@@ -125,13 +132,20 @@ export default function DataAdmin() {
         return isValid;
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
         setIsSubmitting(true);
+        setResponseError('');
+        setResponseSuccess('');
         
-        if (validateForm()) {
-            console.log('Форма валидна, данные:', formData);
-            alert('Форма успешно отправлена!');
+        if (!validateForm()) {
+            setIsSubmitting(false);
+            return;
+        }
+        
+        try {
+            const response = await post('http://localhost:8081/dashboard/admin/createProfile', formData);
+            setResponseSuccess('Профиль успешно создан');
             setFormData({
                 'fullName': '',
                 'fullSupervisorName': '',
@@ -140,12 +154,14 @@ export default function DataAdmin() {
                 'jobTitle': '',
                 'divisionName': ''
             });
-            setFile(null);
-        } else {
-            console.log('Форма содержит ошибки');
+            navigate('/proposals');
+            console.log('Успешный ответ:', response);
+        } catch (err) {
+            setResponseError(err.message || 'Произошла ошибка при создании профиля');
+            console.error('Ошибка при создании профиля:', err);
+        } finally {
+            setIsSubmitting(false);
         }
-        
-        setIsSubmitting(false);
     };
 
     return (
@@ -158,6 +174,16 @@ export default function DataAdmin() {
                     <form onSubmit={handleSubmit} className={styles.wrapper}>
                         <div className={styles.blank}></div>
                         <div className={styles.form}>
+                            {responseError && (
+                                <div className={styles.formItem} style={{ color: 'red', marginBottom: '1em' }}>
+                                    {responseError}
+                                </div>
+                            )}
+                            {responseSuccess && (
+                                <div className={styles.formItem} style={{ color: 'green', marginBottom: '1em' }}>
+                                    {responseSuccess}
+                                </div>
+                            )}
                             <div className={styles.infoForm}>
                                 <div className={styles.formItem} style={{fontWeight: 600}}>Основная информация</div>
                                 <div className={styles.formItem}>
@@ -263,7 +289,6 @@ export default function DataAdmin() {
                                             color: '#ffffffde',
                                         },
                                     }}
-                                    onClick={handleSubmit}
                                 >
                                     {isSubmitting ? 'Сохранение...' : 'Сохранить'}
                                 </Button>

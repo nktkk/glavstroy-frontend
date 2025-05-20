@@ -6,22 +6,6 @@ import { Add } from '@mui/icons-material';
 import { createTheme } from '@mui/material/styles';
 import Selector from './Selector';
 
-const mockcard = {
-    "proposalId": "pr-018f3efa-7e00-0007-9a4b-3274891bc200",
-    "proposalName": "Ремонт кровли жилого дома",
-    "contractorId": "usr-018f3efa-7e00-0007-9a4b-3274891bc200",
-    "contractorName": "ООО СтройГрад",
-    "contractorInn": "1234567890",
-    "okvedCode": "43.21",
-    "facility": "ЖК Северная долина",
-    "priceListFileUrl": "https://storage.example.com/pricelists/prop-12345678.pdf",
-    "createdAt": "2023-05-15T10:30:00+03:00",
-    "updatedAt": "2023-05-20T14:45:00+03:00",
-    "socialFacility": "Детский сад",
-    "description": "Капитальный ремонт кровли с заменой покрытия и утеплением",
-    "fullProposalPrice": '232,4'
-}
-
 const popupTheme = createTheme({
   components: {
     MuiTextField: {
@@ -480,7 +464,6 @@ function ProjectDetailsPopup({ cardData, isOpen, onClose, contractor, create }) 
 }
 
 export default function OfferCardComponent({cardData, contractor, create}) {
-    cardData = mockcard;
     const [isPopupOpen, setIsPopupOpen] = useState(false);
 
     const handleCardClick = () => {

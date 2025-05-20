@@ -1,6 +1,6 @@
 import styles from './OfferList.module.css'
-import { Box, Button, TextField, Stack, Popover, IconButton} from '@mui/material';
-import { useState, useEffect } from 'react';
+import { Box, Button, TextField, Stack, Popover, IconButton, CircularProgress } from '@mui/material';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -27,12 +27,41 @@ const objects = {
   'Кронфорт': 'Кронфорт'
 };
 
+const API_URL = 'http://localhost:8080/proposal-service/proposal/list';
+
+// API helper function
+const postData = async (url, data) => {
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    throw error;
+  }
+};
+
 export default function OfferList(){
     const [selectedPeriod, setSelectedPeriod] = useState('today');
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [anchorEl, setAnchorEl] = useState(null);
     const [isFullWidth, setIsFullWidth] = useState(true);
+    const [proposals, setProposals] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [hasMore, setHasMore] = useState(false);
+    const [error, setError] = useState(null);
+    const observer = useRef();
 
     const [filterData, setFilterData] = useState({
         "proposalId": '',
@@ -53,8 +82,44 @@ export default function OfferList(){
             "max": ''
         },
         "afterId": '',
-        "limit": 50
+        "limit": 10
     });
+
+    const fetchProposals = async (isInitialLoad = false) => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            // If we're starting a new search, reset proposals and afterId
+            const requestData = { ...filterData };
+            if (isInitialLoad) {
+                requestData.afterId = '';
+                setProposals([]);
+            }
+            
+            const response = await postData(API_URL, requestData);
+            
+            if (response && response.proposals) {
+                setProposals(prevProposals => 
+                    isInitialLoad ? response.proposals : [...prevProposals, ...response.proposals]
+                );
+                setHasMore(response.pageInfo?.hasMore || false);
+                
+                // Update afterId for pagination
+                if (response.pageInfo?.afterId) {
+                    setFilterData(prev => ({
+                        ...prev,
+                        afterId: response.pageInfo.afterId
+                    }));
+                }
+            }
+        } catch (err) {
+            setError('Failed to load proposals. Please try again.');
+            console.error('Error fetching proposals:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleButtonClick = (period, event) => {
         setSelectedPeriod(period);
@@ -123,7 +188,6 @@ export default function OfferList(){
             ...prev,
             [name]: value
         }));
-        console.log(filterData);
     };
 
     const checkPrice = (min, max) => {
@@ -172,13 +236,28 @@ export default function OfferList(){
 
     const handleSubmit = (e) => {
         checkPrice(filterData.priceRange.min, filterData.priceRange.max);
-        console.log('submitted', filterData);
         setIsFullWidth(false);
+        fetchProposals(true); // true indicates a new search
     }
 
     const handleGoToDashboard = (e) => {
-        console.log('ef')
+        console.log('Navigate to dashboard');
+        // Add navigation logic here
     }
+
+    // Setup intersection observer for infinite scrolling
+    const lastProposalElementRef = useCallback(node => {
+        if (loading) return;
+        if (observer.current) observer.current.disconnect();
+        
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                fetchProposals(false); // Load more data
+            }
+        });
+        
+        if (node) observer.current.observe(node);
+    }, [loading, hasMore]);
 
     return(
         <>
@@ -444,14 +523,46 @@ export default function OfferList(){
                     </div>
                 </div>
                 <div className={styles.offerListContainer}>
-                    <OfferCardComponent contractor={false}></OfferCardComponent>
-                    <OfferCardComponent contractor={false}></OfferCardComponent>
-                    <OfferCardComponent contractor={false}></OfferCardComponent>
-                    <OfferCardComponent contractor={false}></OfferCardComponent>
-                    <OfferCardComponent contractor={false}></OfferCardComponent>
-                    <OfferCardComponent contractor={false}></OfferCardComponent>
-                    <OfferCardComponent contractor={false}></OfferCardComponent>
-                    <OfferCardComponent contractor={false}></OfferCardComponent>
+                    {proposals.length > 0 ? (
+                        proposals.map((proposal, index) => {
+                            // For the last element, attach the ref for infinite scrolling
+                            if (proposals.length === index + 1) {
+                                return (
+                                    <div ref={lastProposalElementRef} key={proposal.proposalId}>
+                                        <OfferCardComponent contractor={false} cardData={proposal} />
+                                    </div>
+                                );
+                            } else {
+                                return (
+                                    <div key={proposal.proposalId}>
+                                        <OfferCardComponent contractor={false} cardData={proposal} />
+                                    </div>
+                                );
+                            }
+                        })
+                    ) : (
+                        !loading && <div className={styles.noResults}>Нет предложений для отображения</div>
+                    )}
+                    
+                    {loading && (
+                        <div className={styles.loadingContainer}>
+                            <CircularProgress size={40} />
+                            <p>Загрузка предложений...</p>
+                        </div>
+                    )}
+                    
+                    {error && (
+                        <div className={styles.errorContainer}>
+                            <p>{error}</p>
+                            <Button 
+                                variant="contained" 
+                                onClick={() => fetchProposals(true)}
+                                sx={{color: '#fff', bgcolor: '#005BB9', mt: 2}}
+                            >
+                                Попробовать снова
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </div>
         </>
