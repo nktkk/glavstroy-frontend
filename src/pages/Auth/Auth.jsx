@@ -126,8 +126,7 @@ export default function Auth(){
                     if (result.success && result.user) {
                         switch (result.user.role) {
                             case 'ADMIN':
-                                const idadm = localStorage.getItem('adminId');
-                                navigate(`/dashboard/admin/${idadm}`, { replace: true });
+                                navigate('/proposals', { replace: true });
                             case 'CONTRACTOR':
                                 const idcontr = localStorage.getItem('contractorId');
                                 navigate(`/dashboard/contractor/${idcontr}`, { replace: true });

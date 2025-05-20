@@ -81,8 +81,8 @@ export default function OfferList(){
             "to": null
         },
         "priceRange": {
-            "min": '',
-            "max": ''
+            "min": null,
+            "max": null
         },
         "afterId": '',
         "limit": 10
