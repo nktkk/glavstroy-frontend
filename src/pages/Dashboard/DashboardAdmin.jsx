@@ -28,7 +28,8 @@ export default function DashboardAdmin() {
         fullSupervisorName: "",
         phoneNumber: "",
         jobTitle: "",
-        divisionName: ""
+        divisionName: "",
+        adminId: adminId
     });
 
     // Загрузка данных администратора при монтировании компонента
@@ -168,6 +169,7 @@ export default function DashboardAdmin() {
         if (validateForm()) {
             try {
                 setLoading(true);
+                
                 const response = await fetch('http://localhost:8081/dashboard/admin/updateProfile', {
                     method: 'POST',
                     headers: {
