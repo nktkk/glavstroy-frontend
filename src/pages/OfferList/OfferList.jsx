@@ -95,7 +95,7 @@ export default function OfferList(){
             
             const requestData = { ...filterData };
             if (isInitialLoad) {
-                requestData.afterId = '';
+                requestData.afterId = null;
                 setProposals([]);
             }
             if(requestData.priceRange.max === ''){
