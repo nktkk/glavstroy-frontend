@@ -67,12 +67,12 @@ export default function OfferList(){
     const navigate = useNavigate();
 
     const [filterData, setFilterData] = useState({
-        "proposalId": '',
-        "proposalName": '',
-        "contractorId": '',
-        "contractorName": '',
-        "contractorInn": '',
-        "contractNumber": '',
+        "proposalId": null,
+        "proposalName": null,
+        "contractorId": null,
+        "contractorName": null,
+        "contractorInn": null,
+        "contractNumber": null,
         "facilities": [],
         "socialFacilities": [],
         "okvedCodes": [],
@@ -84,7 +84,7 @@ export default function OfferList(){
             "min": '',
             "max": ''
         },
-        "afterId": '',
+        "afterId": null,
         "limit": 10
     });
 
