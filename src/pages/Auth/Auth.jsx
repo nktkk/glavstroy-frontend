@@ -127,11 +127,14 @@ export default function Auth(){
                         switch (result.user.role) {
                             case 'ADMIN':
                                 navigate('/proposals', { replace: true });
+                                break;
                             case 'CONTRACTOR':
                                 const idcontr = localStorage.getItem('contractorId');
                                 navigate(`/dashboard/contractor/${idcontr}`, { replace: true });
+                                break;
                             default:
-                                return '/login';
+                                navigate('/login', { replace: true });
+                                break;
                         }
                         
                     } else {
