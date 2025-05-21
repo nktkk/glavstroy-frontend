@@ -157,7 +157,7 @@ function formatDateTime(dateTimeString) {
     }
 }
 
-function CreateForm({ onSubmit, onClose, contractorId }) {
+function CreateForm({ onSubmit, onClose, contractorId, refreshData }) {
     const [offer, setOffer] = useState({
         'proposalName': '', 
         'fullProposalPrice': '',
@@ -308,6 +308,7 @@ function CreateForm({ onSubmit, onClose, contractorId }) {
                 console.log('Предложение успешно создано');
                 // Сбрасываем значения формы или делаем другие действия при успешном создании
                 onClose();
+                refreshData();
             } else {
                 const errorData = await response.json().catch(() => null);
                 const errorMessage = errorData?.message || `Ошибка при создании предложения: ${response.status}`;
@@ -561,7 +562,7 @@ function DetailView({ cardData, onClose, contractor }) {
     );
 }
 
-function ProjectDetailsPopup({ cardData, isOpen, onClose, contractor, create, contractorId }) {
+function ProjectDetailsPopup({ cardData, isOpen, onClose, contractor, create, contractorId, refreshData }) {
     const handleSubmitOffer = (offerData) => {
         console.log("Отправляем предложение:", offerData);
         // Здесь можно добавить логику для отправки данных на сервер
@@ -584,6 +585,7 @@ function ProjectDetailsPopup({ cardData, isOpen, onClose, contractor, create, co
                                 onSubmit={handleSubmitOffer} 
                                 onClose={onClose} 
                                 contractorId={contractorId} 
+                                refreshData={refreshData}
                             />
                         ) : (
                             <DetailView 
@@ -600,7 +602,7 @@ function ProjectDetailsPopup({ cardData, isOpen, onClose, contractor, create, co
     );
 }
 
-export default function OfferCardComponent({cardData, contractor, create, contractorId}) {
+export default function OfferCardComponent({cardData, contractor, create, contractorId, refreshData}) {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
 
     const handleCardClick = () => {
@@ -644,6 +646,7 @@ export default function OfferCardComponent({cardData, contractor, create, contra
                 contractor={contractor}
                 create={create}
                 contractorId={contractorId}
+                refreshData={refreshData}
             />
         </>
     );

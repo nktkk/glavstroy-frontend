@@ -647,6 +647,7 @@ export default function DashboardContractor({ view }) {
                                 contractor={true}
                                 create={true}
                                 contractorId={contractorData.publicId}
+                                refreshData={fetchContractorData}
                             />
                         </div>
                     )}
