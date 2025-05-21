@@ -29,9 +29,8 @@ export default function DashboardAdmin() {
         phoneNumber: "",
         jobTitle: "",
         divisionName: "",
-        adminId: adminId
+        adminId: localStorage.getItem('adminId')
     });
-
     // Загрузка данных администратора при монтировании компонента
     useEffect(() => {
         fetchAdminData();

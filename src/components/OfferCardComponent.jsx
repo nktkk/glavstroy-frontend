@@ -1,5 +1,5 @@
 import { Button, FormHelperText, IconButton, Link, TextField, ThemeProvider } from '@mui/material';
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './OfferCardComponent.module.css'
 import { Add } from '@mui/icons-material';
@@ -167,6 +167,7 @@ function CreateForm({ onSubmit, onClose, contractorId, refreshData }) {
         'socialFacility': '',
         'description': '',
     });
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const { post } = useApiService();
     
     const [priceListFile, setPriceListFile] = useState(null);
@@ -270,6 +271,7 @@ function CreateForm({ onSubmit, onClose, contractorId, refreshData }) {
     e.preventDefault();
     
     if (validateForm()) {
+        setIsSubmitting(true);
         // 1. Создаем JSON-данные из полей формы
         const jsonData = {
             'proposalName': offer.proposalName, 
@@ -315,12 +317,15 @@ function CreateForm({ onSubmit, onClose, contractorId, refreshData }) {
                 console.error(errorMessage);
                 // Показываем ошибку пользователю если необходимо
             }
+            setIsSubmitting(false);
         } catch (error) {
             console.error('Ошибка при отправке предложения:', error);
             // Показываем пользователю сообщение об ошибке
+            setIsSubmitting(false);
         }
     } else {
         console.log('Форма содержит ошибки');
+        setIsSubmitting(false);
     }
 };
 
@@ -447,6 +452,7 @@ function CreateForm({ onSubmit, onClose, contractorId, refreshData }) {
                                         border: '1px solid #f8f9fa',
                                     }
                                 }}
+                                disabled={isSubmitting}
                             >
                                 Создать
                             </Button>

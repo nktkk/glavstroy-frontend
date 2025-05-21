@@ -39,11 +39,11 @@ export default function DashboardContractor({ view }) {
         contract: '',
     });
     const taxFormDict = {
-        "OSN": 'OSN',
-        "USN": 'USN',
-        "ENVD": 'ENVD',
-        "ESHN": 'ESHN',
-        "PATENT": 'PATENT',
+        "OSN": 'ОСНО',
+        "USN": 'УСН',
+        "ENVD": 'ЕНВД',
+        "ESHN": 'ЕСХН',
+        "PATENT": 'ПСН',
     }
 
     const [offers, setOffers] = useState([]);
@@ -639,15 +639,21 @@ export default function DashboardContractor({ view }) {
                     {view ? (
                         <></>
                     ) : (
-                        <div className={styles.createOfferButton}>
-                            <OfferCardComponent 
-                                cardData={''}
-                                contractor={true}
-                                create={true}
-                                contractorId={contractorData.publicId}
-                                refreshData={fetchContractorData}
-                            />
-                        </div>
+                        <>
+                            {contractorData.isBlocked ? (
+                                <></>
+                            ) : (
+                                <div className={styles.createOfferButton}>
+                                    <OfferCardComponent 
+                                        cardData={''}
+                                        contractor={true}
+                                        create={true}
+                                        contractorId={contractorData.publicId}
+                                        refreshData={fetchContractorData}
+                                    />
+                                </div>
+                            )}
+                        </>
                     )}
                     <div className={styles.offersGrid}>
                         {offers.map((offer) => (

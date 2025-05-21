@@ -72,11 +72,11 @@ export default function DataContractor() {
         'contract': '',
     });
     const taxFormDict = {
-        "OSN": 'OSN',
-        "USN": 'USN',
-        "ENVD": 'ENVD',
-        "ESHN": 'ESHN',
-        "PATENT": 'PATENT',
+        "OSN": 'ОСНО',
+        "USN": 'УСН',
+        "ENVD": 'ЕНВД',
+        "ESHN": 'ЕСХН',
+        "PATENT": 'ПСН',
     }
 
     const [isSubmitting, setIsSubmitting] = useState(false);
