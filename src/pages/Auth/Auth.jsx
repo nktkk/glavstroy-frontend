@@ -142,8 +142,29 @@ export default function Auth(){
                     }
                 }
             } catch (error) {
-                setSubmitError('Произошла ошибка при обработке запроса');
-                console.error('Ошибка при отправке формы:', error);
+                // Обработка 422 ошибки
+                if (error.response && error.response.status === 422) {
+                    const errorData = error.response.data;
+                    
+                    if (regToggle) {
+                        // Обработка ошибок при регистрации
+                        if (errorData.code === 'UserAlreadyExists') {
+                            setSubmitError(errorData.message || 'Пользователь с таким email уже существует');
+                        } else {
+                            setSubmitError(errorData.message || 'Ошибка при регистрации');
+                        }
+                    } else {
+                        // Обработка ошибок при логине
+                        if (errorData.code === 'UserNotFound' || errorData.code === 'InvalidPassword') {
+                            setSubmitError(errorData.message || 'Неверный email или пароль');
+                        } else {
+                            setSubmitError(errorData.message || 'Ошибка при входе');
+                        }
+                    }
+                } else {
+                    setSubmitError('Произошла ошибка при обработке запроса');
+                    console.error('Ошибка при отправке формы:', error);
+                }
             } finally {
                 setLoading(false);
             }

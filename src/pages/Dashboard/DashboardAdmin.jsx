@@ -29,7 +29,6 @@ export default function DashboardAdmin() {
         phoneNumber: "",
         jobTitle: "",
         divisionName: "",
-        adminId: localStorage.getItem('adminId')
     });
     // Загрузка данных администратора при монтировании компонента
     useEffect(() => {
@@ -168,13 +167,22 @@ export default function DashboardAdmin() {
         if (validateForm()) {
             try {
                 setLoading(true);
+                const newData = {
+                    adminId: localStorage.getItem('adminId'),
+                    email: adminData.email,
+                    fullName: adminData.fullName,
+                    fullSupervisorName: adminData.fullSupervisorName,
+                    phoneNumber: adminData.phoneNumber,
+                    jobTitle: adminData.jobTitle,
+                    divisionName: adminData.divisionName,
+                }
                 
                 const response = await fetch('http://localhost:8081/dashboard/admin/updateProfile', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(adminData),
+                    body: JSON.stringify(newData),
                 });
                 
                 if (!response.ok) {
