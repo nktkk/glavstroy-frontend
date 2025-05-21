@@ -31,7 +31,12 @@ export default function DashboardContractor({ view }) {
         taxForm: "",
         okvedCode: "",
         isBlocked: false,
-        blockedReason: ''
+        blockedReason: '',
+        revenueOne: '',
+        revenueTwo: '',
+        revenueThree: '',
+        revenueFour: '',
+        contract: '',
     });
     const taxFormDict = {
         "OSN": 'OSN',
@@ -44,18 +49,8 @@ export default function DashboardContractor({ view }) {
     const [offers, setOffers] = useState([]);
 
     const [errors, setErrors] = useState({
-        identificationNumber: '',
-        contractorName: '',
-        contractorFullName: '',
-        contractorDescription: '',
         email: '',
         phoneNumber: '',
-        kpp: '',
-        inn: '',
-        foundedAt: '',
-        address: '',
-        taxForm: '',
-        okvedCode: '',
     });
 
     // Fetch contractor data when component mounts
@@ -98,7 +93,12 @@ export default function DashboardContractor({ view }) {
                     taxForm: data.contractor.taxForm || '',
                     okvedCode: data.contractor.okvedCode || '',
                     isBlocked: data.contractor.isBlocked || false,
-                    blockedReason: data.contractor.blockedReason || ''
+                    blockedReason: data.contractor.blockedReason || '',
+                    revenueOne: data.contractor.revenueOne || '',
+                    revenueTwo: data.contractor.revenueTwo || '',
+                    revenueThree: data.contractor.revenueThree || '',
+                    revenueFour: data.contractor.revenueFour || '',
+                    contract: data.contractor.contract || '',
                 });
             }
             
@@ -123,26 +123,6 @@ export default function DashboardContractor({ view }) {
         const digitsOnly = phone.replace(/\D/g, '');
         return digitsOnly.length === 11 && (digitsOnly.startsWith('7') || digitsOnly.startsWith('8'));
     };
-
-    const validateINN = (inn) => {
-        if (!/^\d{10}$/.test(inn)) return false;
-        const checkDigit = [2, 4, 10, 3, 5, 9, 4, 6, 8];
-        let sum = 0;
-        
-        for (let i = 0; i < 9; i++) {
-            sum += parseInt(inn.charAt(i)) * checkDigit[i];
-        }
-        
-        sum = sum % 11;
-        sum = sum % 10;
-        
-        return sum === parseInt(inn.charAt(9));
-    };
-
-    const validateKPP = (kpp) => {
-        return /^\d{4}[A-Z0-9]{2}\d{3}$/.test(kpp);
-    };
-
     const handleInputChange = (field, value) => {
         if (!view) {
             setContractorData(prev => ({
@@ -163,29 +143,6 @@ export default function DashboardContractor({ view }) {
         const newErrors = {};
         let isValid = true;
 
-        if (!contractorData.identificationNumber.trim()) {
-            newErrors.identificationNumber = 'Идентификационный номер обязателен';
-            isValid = false;
-        }
-
-        if (!contractorData.contractorName.trim()) {
-            newErrors.contractorName = 'Наименование подрядчика обязательно';
-            isValid = false;
-        } else if (contractorData.contractorName.length < 3) {
-            newErrors.contractorName = 'Наименование должно содержать не менее 3 символов';
-            isValid = false;
-        }
-
-        if (!contractorData.contractorFullName.trim()) {
-            newErrors.contractorFullName = 'Полное наименование обязательно';
-            isValid = false;
-        }
-
-        if (!contractorData.contractorDescription.trim()) {
-            newErrors.contractorDescription = 'Описание деятельности обязательно';
-            isValid = false;
-        }
-
         if (!contractorData.email.trim()) {
             newErrors.email = 'Email обязателен';
             isValid = false;
@@ -202,42 +159,6 @@ export default function DashboardContractor({ view }) {
             isValid = false;
         }
 
-        if (!contractorData.kpp.trim()) {
-            newErrors.kpp = 'КПП обязателен';
-            isValid = false;
-        } else if (!validateKPP(contractorData.kpp)) {
-            newErrors.kpp = 'Введите корректный КПП (9 знаков)';
-            isValid = false;
-        }
-
-        if (!contractorData.inn.trim()) {
-            newErrors.inn = 'ИНН обязателен';
-            isValid = false;
-        } else if (!validateINN(contractorData.inn)) {
-            newErrors.inn = 'Введите корректный ИНН юридического лица (10 цифр)';
-            isValid = false;
-        }
-
-        if (!contractorData.foundedAt) {
-            newErrors.foundedAt = 'Дата основания обязательна';
-            isValid = false;
-        }
-
-        if (!contractorData.address.trim()) {
-            newErrors.address = 'Адрес обязателен';
-            isValid = false;
-        }
-
-        if (!contractorData.taxForm.trim()) {
-            newErrors.taxForm = 'Форма налогообложения обязательна';
-            isValid = false;
-        }
-
-        if (!contractorData.okvedCode.trim()) {
-            newErrors.okvedCode = 'Код ОКВЭД обязателен';
-            isValid = false;
-        }
-
         setErrors(newErrors);
         return isValid;
     };
@@ -246,13 +167,20 @@ export default function DashboardContractor({ view }) {
         if (validateForm()) {
             try {
                 setLoading(true);
+                // Отправляем только нужные поля на сервер
+                const updateData = {
+                    contractorId: localStorage.getItem('contractorId'),
+                    email: contractorData.email,
+                    phoneNumber: contractorData.phoneNumber
+                };
+                
                 const response = await fetch('http://localhost:8081/dashboard/contractor/updateProfile', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(contractorData),
+                    body: JSON.stringify(updateData),
                 });
                 
                 if (!response.ok) {
@@ -504,7 +432,7 @@ export default function DashboardContractor({ view }) {
                             label="Наименование подрядчика"
                             value={contractorData.contractorName}
                             onChange={(e) => handleInputChange('contractorName', e.target.value)}
-                            disabled={view || !edit}
+                            disabled={true}
                             variant="outlined"
                             className={styles.textField}
                             error={!!errors.contractorName}
@@ -524,7 +452,7 @@ export default function DashboardContractor({ view }) {
                             label="Идентификационный номер"
                             value={contractorData.identificationNumber}
                             onChange={(e) => handleInputChange('identificationNumber', e.target.value)}
-                            disabled={view || !edit}
+                            disabled={true}
                             variant="outlined"
                             className={styles.textField}
                             error={!!errors.identificationNumber}
@@ -544,7 +472,7 @@ export default function DashboardContractor({ view }) {
                             label="Полное наименование"
                             value={contractorData.contractorFullName}
                             onChange={(e) => handleInputChange('contractorFullName', e.target.value)}
-                            disabled={view || !edit}
+                            disabled={true}
                             variant="outlined"
                             className={styles.textField}
                             error={!!errors.contractorFullName}
@@ -555,7 +483,7 @@ export default function DashboardContractor({ view }) {
                             label="КПП"
                             value={contractorData.kpp}
                             onChange={(e) => handleInputChange('kpp', e.target.value)}
-                            disabled={view || !edit}
+                            disabled={true}
                             variant="outlined"
                             className={styles.textField}
                             error={!!errors.kpp}
@@ -567,7 +495,7 @@ export default function DashboardContractor({ view }) {
                             type="date"
                             value={contractorData.foundedAt}
                             onChange={(e) => handleInputChange('foundedAt', e.target.value)}
-                            disabled={view || !edit}
+                            disabled={true}
                             variant="outlined"
                             className={styles.textField}
                             error={!!errors.foundedAt}
@@ -578,7 +506,7 @@ export default function DashboardContractor({ view }) {
                             label="ИНН"
                             value={contractorData.inn}
                             onChange={(e) => handleInputChange('inn', e.target.value)}
-                            disabled={view || !edit}
+                            disabled={true}
                             variant="outlined"
                             className={styles.textField}
                             error={!!errors.inn}
@@ -591,7 +519,7 @@ export default function DashboardContractor({ view }) {
                             dict={okvedDictionary}
                             single={true}
                             onSelectionChange={handleOkvedChange}
-                            disabled={view || !edit}
+                            disabled={true}
                             className={styles.textField}
                             error={!!errors.okvedCode}
                             helperText={errors.okvedCode}
@@ -604,7 +532,7 @@ export default function DashboardContractor({ view }) {
                             dict={taxFormDict}
                             single={true}
                             onSelectionChange={handleTaxformChange}
-                            disabled={view || !edit}
+                            disabled={true}
                             className={styles.textField}
                             error={!!errors.taxForm}
                             helperText={errors.taxForm}
@@ -615,7 +543,7 @@ export default function DashboardContractor({ view }) {
                             label="Адрес"
                             value={contractorData.address}
                             onChange={(e) => handleInputChange('address', e.target.value)}
-                            disabled={view || !edit}
+                            disabled={true}
                             variant="outlined"
                             className={styles.textField}
                             multiline
@@ -628,13 +556,60 @@ export default function DashboardContractor({ view }) {
                             label="Описание деятельности"
                             value={contractorData.contractorDescription}
                             onChange={(e) => handleInputChange('contractorDescription', e.target.value)}
-                            disabled={view || !edit}
+                            disabled={true}
                             variant="outlined"
                             className={styles.textField}
                             multiline
                             rows={2}
                             error={!!errors.contractorDescription}
                             helperText={errors.contractorDescription}
+                        />
+
+                        <TextField
+                            label="Выручка за 2022 год"
+                            value={contractorData.revenueOne}
+                            onChange={(e) => handleInputChange('revenueOne', e.target.value)}
+                            disabled={true}
+                            variant="outlined"
+                            className={styles.textField}
+                        />
+
+                        <TextField
+                            label="Выручка за 2023 год"
+                            value={contractorData.revenueTwo}
+                            onChange={(e) => handleInputChange('revenueTwo', e.target.value)}
+                            disabled={true}
+                            variant="outlined"
+                            className={styles.textField}
+                        />
+
+                        <TextField
+                            label="Выручка за 2024 год"
+                            value={contractorData.revenueThree}
+                            onChange={(e) => handleInputChange('revenueThree', e.target.value)}
+                            disabled={true}
+                            variant="outlined"
+                            className={styles.textField}
+                        />
+
+                        <TextField
+                            label="Выручка за 2025 год"
+                            value={contractorData.revenueFour}
+                            onChange={(e) => handleInputChange('revenueFour', e.target.value)}
+                            disabled={true}
+                            variant="outlined"
+                            className={styles.textField}
+                        />
+
+                        <TextField
+                            label="Описание контрактов"
+                            value={contractorData.contract}
+                            onChange={(e) => handleInputChange('contract', e.target.value)}
+                            disabled={true}
+                            variant="outlined"
+                            className={styles.textField}
+                            multiline
+                            rows={2}
                         />
 
                     </div>
