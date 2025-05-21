@@ -258,7 +258,7 @@ export default function DashboardContractor({ view }) {
                 },
                 body: JSON.stringify({
                     contractorId: contractorId,
-                    reason: reason
+                    blockReason: reason
                 }),
             });
             
@@ -269,8 +269,6 @@ export default function DashboardContractor({ view }) {
             const data = await response.json();
             console.log('Профиль успешно заблокирован:', data);
             setBlock(false);
-            
-            // Refresh contractor data after blocking
             await fetchContractorData();
         } catch (error) {
             console.error('Ошибка при блокировке профиля:', error);
@@ -300,7 +298,6 @@ export default function DashboardContractor({ view }) {
             
             const data = await response.json();
             console.log('Профиль успешно разблокирован:', data);
-            
             // Refresh contractor data after unblocking
             await fetchContractorData();
         } catch (error) {
