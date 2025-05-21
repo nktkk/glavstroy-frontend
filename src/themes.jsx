@@ -255,6 +255,10 @@ const registerFormTheme = createTheme({
     MuiTextField: {
       styleOverrides: {
         root: {
+          '& .MuiInputBase-inputMultiline': {
+            fontFamily: 'Montserrat',
+            color: '#000',
+          },
           '& .MuiInputLabel-outlined': {
             fontFamily: 'Montserrat',
             color: '#000',

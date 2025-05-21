@@ -29,8 +29,6 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 export default function DataContractor() {
-    const [revenueFile, setRevenueFile] = useState(null);
-    const [contractFile, setContractFile] = useState(null);
     const { post } = useApiService();
     const navigate = useNavigate();
     const [responseError, setResponseError] = useState('');
@@ -47,7 +45,12 @@ export default function DataContractor() {
         'foundedAt': '',
         'address': '',
         'taxForm': '',
-        'okvedCode': ''
+        'okvedCode': '',
+        'revenueOne': '',
+        'revenueTwo': '',
+        'revenueThree': '',
+        'revenueFour': '',
+        'contract': '',
     });
     const [errors, setErrors] = useState({
         'identificationNumber': '',
@@ -62,9 +65,11 @@ export default function DataContractor() {
         'address': '',
         'taxForm': '',
         'okvedCode': '',
-        'file': '',
-        'revenueFile': '',
-        'contractFile': ''
+        'revenueOne': '',
+        'revenueTwo': '',
+        'revenueThree': '',
+        'revenueFour': '',
+        'contract': '',
     });
     const taxFormDict = {
         "OSN": 'OSN',
@@ -114,17 +119,6 @@ export default function DataContractor() {
             setErrors({
                 ...errors,
                 okvedCode: ''
-            });
-        }
-    };
-
-    const handleRevenueFileChange = (event) => {
-        const selectedFile = event.target.files[0];
-        setRevenueFile(selectedFile);
-        if (errors.revenueFile) {
-            setErrors({
-                ...errors,
-                revenueFile: ''
             });
         }
     };
@@ -191,6 +185,39 @@ export default function DataContractor() {
         
         const fileExtension = file.name.split('.').pop().toLowerCase();
         return fileExtension === 'xlsx' || fileExtension === 'xls';
+    };
+
+    // Функция для валидации числового поля
+    const validateRevenue = (value) => {
+        // Проверяем, что строка содержит только цифры, точку или запятую
+        if (!value.trim()) {
+            return false;
+        }
+        
+        // Проверка на числовое значение (с учетом точки или запятой)
+        const cleanValue = value.replace(',', '.');
+        return !isNaN(parseFloat(cleanValue)) && isFinite(cleanValue);
+    };
+
+    // Функция для форматирования числа в формат BigDecimal
+    const formatToBigDecimal = (value) => {
+        if (!value) return '0.0';
+        
+        // Заменяем запятую на точку
+        let formatted = value.replace(',', '.');
+        
+        // Если в строке нет ни точки, ни запятой, добавляем '.0'
+        if (!formatted.includes('.')) {
+            formatted = `${formatted}.0`;
+        } else {
+            // Если есть точка, но после нее нет цифр, добавляем '0'
+            const parts = formatted.split('.');
+            if (parts.length > 1 && parts[1] === '') {
+                formatted = `${parts[0]}.0`;
+            }
+        }
+        
+        return formatted;
     };
 
     const validateForm = () => {
@@ -280,17 +307,42 @@ export default function DataContractor() {
             newErrors.okvedCode = 'Выберите код ОКВЭД';
             isValid = false;
         }
-
-        if (!revenueFile) {
-            newErrors.revenueFile = 'Загрузите файл выручки';
+        
+        // Валидация полей выручки
+        if (!formData.revenueOne.trim()) {
+            newErrors.revenueOne = 'Введите выручку за 2022 год';
             isValid = false;
-        } else if (!validateExcelFile(revenueFile)) {
-            newErrors.revenueFile = 'Загрузите файл в формате Excel (.xlsx или .xls)';
+        } else if (!validateRevenue(formData.revenueOne)) {
+            newErrors.revenueOne = 'Введите корректное числовое значение';
             isValid = false;
         }
-
-        if (!contractFile) {
-            newErrors.contractFile = 'Загрузите файл контракта';
+        
+        if (!formData.revenueTwo.trim()) {
+            newErrors.revenueTwo = 'Введите выручку за 2023 год';
+            isValid = false;
+        } else if (!validateRevenue(formData.revenueTwo)) {
+            newErrors.revenueTwo = 'Введите корректное числовое значение';
+            isValid = false;
+        }
+        
+        if (!formData.revenueThree.trim()) {
+            newErrors.revenueThree = 'Введите выручку за 2024 год';
+            isValid = false;
+        } else if (!validateRevenue(formData.revenueThree)) {
+            newErrors.revenueThree = 'Введите корректное числовое значение';
+            isValid = false;
+        }
+        
+        if (!formData.revenueFour.trim()) {
+            newErrors.revenueFour = 'Введите выручку за 2025 год';
+            isValid = false;
+        } else if (!validateRevenue(formData.revenueFour)) {
+            newErrors.revenueFour = 'Введите корректное числовое значение';
+            isValid = false;
+        }
+        
+        if (!formData.contract.trim()) {
+            newErrors.contract = 'Введите описание контрактов';
             isValid = false;
         }
 
@@ -321,6 +373,13 @@ export default function DataContractor() {
             setIsSubmitting(false);
             return;
         }
+        
+        // Форматируем числовые поля выручки для BigDecimal
+        const formattedRevenueOne = formatToBigDecimal(formData.revenueOne);
+        const formattedRevenueTwo = formatToBigDecimal(formData.revenueTwo);
+        const formattedRevenueThree = formatToBigDecimal(formData.revenueThree);
+        const formattedRevenueFour = formatToBigDecimal(formData.revenueFour);
+        
         const jsonData = {
             'identificationNumber': formData.identificationNumber,
             'contractorName': formData.contractorName,
@@ -333,11 +392,17 @@ export default function DataContractor() {
             'foundedAt': formData.foundedAt,
             'address': formData.address,
             'taxForm': formData.taxForm,
-            'okvedCode': formData.okvedCode
+            'okvedCode': formData.okvedCode,
+            'revenueOne': formattedRevenueOne,
+            'revenueTwo': formattedRevenueTwo,
+            'revenueThree': formattedRevenueThree,
+            'revenueFour': formattedRevenueFour,
+            'contract': formData.contract
         };
 
         // 2. Создание FormData для файлов
         const formDataToSend = new FormData();
+        console.log(jsonData);
         
         // 3. Добавляем JSON как строку в FormData
         formDataToSend.append('request', new Blob(
@@ -345,9 +410,6 @@ export default function DataContractor() {
             { type: 'application/json' }
         ), 'data.json');
         
-        // 4. Добавляем файлы
-        if (revenueFile) formDataToSend.append('revenueFile', revenueFile);
-        if (contractFile) formDataToSend.append('contractFile', contractFile);
 
         try {
             const response = await fetch('http://localhost:8081/dashboard/contractor/createProfile', {
@@ -395,9 +457,12 @@ export default function DataContractor() {
                 address: '',
                 taxForm: '',
                 okvedCode: '',
+                revenueOne: '',
+                revenueTwo: '',
+                revenueThree: '',
+                revenueFour: '',
+                contract: '',
             });
-            setRevenueFile(null);
-            setContractFile(null);
             if (responseData.contractorId) {
                 navigate(`/dashboard/contractor/${responseData.contractorId}`);
             }
@@ -615,6 +680,69 @@ export default function DataContractor() {
                                     </div>
                                 </div>
                             </div>
+                            <div className={styles.financialForm}>
+                                <div className={styles.formItem} style={{fontWeight: 600}}>Финансовая информация</div>
+                                <div>
+                                    <div className={styles.formItem}>
+                                        <TextField 
+                                            type="text"
+                                            name="revenueOne"
+                                            value={formData.revenueOne}
+                                            onChange={handleChange}
+                                            label="Выручка за 2022 год" 
+                                            fullWidth
+                                            error={!!errors.revenueOne}
+                                            helperText={errors.revenueOne}
+                                            required
+                                            placeholder="Например: 1000000.00"
+                                        />
+                                    </div>
+                                    <div className={styles.formItem}>
+                                        <TextField 
+                                            type="text"
+                                            name="revenueTwo"
+                                            value={formData.revenueTwo}
+                                            onChange={handleChange}
+                                            label="Выручка за 2023 год" 
+                                            fullWidth
+                                            error={!!errors.revenueTwo}
+                                            helperText={errors.revenueTwo}
+                                            required
+                                            placeholder="Например: 1000000.00"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className={styles.formItem}>
+                                        <TextField 
+                                            type="text"
+                                            name="revenueThree"
+                                            value={formData.revenueThree}
+                                            onChange={handleChange}
+                                            label="Выручка за 2024 год" 
+                                            fullWidth
+                                            error={!!errors.revenueThree}
+                                            helperText={errors.revenueThree}
+                                            required
+                                            placeholder="Например: 1000000.00"
+                                        />
+                                    </div>
+                                    <div className={styles.formItem}>
+                                        <TextField 
+                                            type="text"
+                                            name="revenueFour"
+                                            value={formData.revenueFour}
+                                            onChange={handleChange}
+                                            label="Выручка за 2025 год" 
+                                            fullWidth
+                                            error={!!errors.revenueFour}
+                                            helperText={errors.revenueFour}
+                                            required
+                                            placeholder="Например: 1000000.00"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                             <div className={styles.miscForm}>
                                 <div className={styles.formItem} style={{fontWeight: 600}}>Прочее</div>
                                 <div>
@@ -638,73 +766,19 @@ export default function DataContractor() {
                                 </div>
                                 <div>
                                     <div className={styles.formItemFile}>
-                                        <Button
-                                            component="label"
-                                            role={undefined}
-                                            variant="contained"
-                                            tabIndex={-1}
-                                            endIcon={revenueFile ? null : <CloudUploadIcon />}
-                                            sx={{
-                                                display: 'flex',
-                                                justifyContent: 'left',
-                                                borderColor: errors.revenueFile ? '#d32f2f' : undefined,
-                                                color: errors.revenueFile ? '#d32f2f' : undefined,
-                                                marginTop: '10px'
-                                            }}
-                                        >
-                                            {revenueFile ? (
-                                                <div className={styles.offerText}>
-                                                    Файл выручки: <div style={{fontWeight: 500}}>{revenueFile.name}</div>
-                                                </div>
-                                            ) : (
-                                                <>Файл выручки (файл excel)</>
-                                            )}
-                                            <VisuallyHiddenInput
-                                                type="file"
-                                                onChange={handleRevenueFileChange}
-                                                accept=".xlsx, .xls"
-                                            />
-                                        </Button>
-                                        {errors.revenueFile && (
-                                            <div className="error-text" style={{ color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px' }}>
-                                                {errors.revenueFile}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className={styles.formItemFile}>
-                                        <Button
-                                            component="label"
-                                            role={undefined}
-                                            variant="contained"
-                                            tabIndex={-1}
-                                            endIcon={contractFile ? null : <CloudUploadIcon />}
-                                            sx={{
-                                                display: 'flex',
-                                                justifyContent: 'left',
-                                                borderColor: errors.contractFile ? '#d32f2f' : undefined,
-                                                color: errors.contractFile ? '#d32f2f' : undefined,
-                                                marginTop: '10px'
-                                            }}
-                                        >
-                                            {contractFile ? (
-                                                <div className={styles.offerText}>
-                                                    Файл контракта: <div style={{fontWeight: 500}}>{contractFile.name}</div>
-                                                </div>
-                                            ) : (
-                                                <>Файл контракта</>
-                                            )}
-                                            <VisuallyHiddenInput
-                                                type="file"
-                                                onChange={handleContractFileChange}
-                                            />
-                                        </Button>
-                                        {errors.contractFile && (
-                                            <div className="error-text" style={{ color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px' }}>
-                                                {errors.contractFile}
-                                            </div>
-                                        )}
+                                        <TextField 
+                                            type="text"
+                                            name="contract"
+                                            value={formData.contract}
+                                            onChange={handleChange}
+                                            label="Описание контрактов" 
+                                            fullWidth
+                                            multiline
+                                            minRows={3}
+                                            error={!!errors.contract}
+                                            helperText={errors.contract}
+                                            required
+                                        />
                                     </div>
                                 </div>
                             </div>
