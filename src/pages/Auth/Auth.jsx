@@ -149,16 +149,16 @@ export default function Auth(){
                     if (regToggle) {
                         // Обработка ошибок при регистрации
                         if (errorData.code === 'UserAlreadyExists') {
-                            setSubmitError(errorData.message || 'Пользователь с таким email уже существует');
+                            setSubmitError(errorData.message.message || 'Пользователь с таким email уже существует');
                         } else {
-                            setSubmitError(errorData.message || 'Ошибка при регистрации');
+                            setSubmitError(errorData.message.message || 'Ошибка при регистрации');
                         }
                     } else {
                         // Обработка ошибок при логине
                         if (errorData.code === 'UserNotFound' || errorData.code === 'InvalidPassword') {
-                            setSubmitError(errorData.message || 'Неверный email или пароль');
+                            setSubmitError(errorData.message.message || 'Неверный email или пароль');
                         } else {
-                            setSubmitError(errorData.message || 'Ошибка при входе');
+                            setSubmitError(errorData.message.message || 'Ошибка при входе');
                         }
                     }
                 } else {
