@@ -269,6 +269,7 @@ export default function DashboardContractor({ view }) {
             const data = await response.json();
             console.log('Профиль успешно заблокирован:', data);
             setBlock(false);
+            setReason('');
             await fetchContractorData();
         } catch (error) {
             console.error('Ошибка при блокировке профиля:', error);
